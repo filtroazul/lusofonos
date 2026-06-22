@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prémios Lusófonos da Criatividade em Saúde · 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- film grain + vignette overlays -->
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
+<!-- iridescent shimmer / particle layer -->
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<!-- scroll progress -->
+<div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+<!-- top nav -->
+<nav class="nav" id="nav">
+  <div class="nav-logo">
+    <span class="logo-mark">✦</span>
+    <span class="logo-txt">Prémios&nbsp;Lusófonos<br/><em>da Criatividade em Saúde</em></span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#sobre">A categoria</a></li>
+    <li><a href="#porque">Por que existe</a></li>
+    <li><a href="#calendario">Calendário</a></li>
+    <li><a href="#rodape">Contactos</a></li>
+  </ul>
+  <a href="#" class="nav-cta">Inscrever projeto</a>
+</nav>
+
+<!-- cinematic control hint -->
+<div class="cine-hint" id="cineHint">
+  <span><b>Espaço</b> tocar cinemático</span>
+  <span><b>H</b> ocultar HUD</span>
+</div>
+
+<!-- ============ SECTION 1 — HERO ============ -->
+<section class="s hero" id="hero" data-scene="0">
+  <div class="hero-media" id="heroMedia">
+    <video class="hero-video-bg" src="hero1.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
+    <video class="hero-video" id="heroVideo" src="hero1.mp4" autoplay muted loop playsinline></video>
+  </div>
+  <div class="hero-glow" aria-hidden="true"></div>
+
+  <div class="hero-content tilt" data-tilt>
+    <p class="eyebrow reveal">Edição 2026 · Portugal</p>
+    <h1 class="display pop3d reveal" data-pop>
+      <span class="line">Entre</span>
+      <span class="line">pessoas.</span>
+    </h1>
+    <p class="hero-sub reveal">A saúde acontece <em>entre pessoas.</em></p>
+    <div class="hero-cta reveal">
+      <a href="#" class="btn btn-primary">Inscrever projeto</a>
+      <a href="#sobre" class="btn btn-ghost">Conhecer a categoria</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 2 — SOBRE A CATEGORIA ============ -->
+<section class="s sobre" id="sobre" data-scene="1">
+  <div class="wrap">
+    <p class="kicker reveal">— A categoria</p>
+    <h2 class="display h-lg reveal" data-pop>
+      Uma premiação dedicada à<br/><span class="grad">criatividade em saúde.</span>
+    </h2>
+    <div class="cols">
+      <p class="body reveal">
+        Os <b>Prémios Lusófonos da Criatividade em Saúde</b> são um festival internacional,
+        sediado em Portugal, dedicado a reconhecer os melhores projetos de criatividade,
+        comunicação e inovação na área da saúde nos países de língua oficial portuguesa.
+      </p>
+      <p class="body reveal">
+        Criados com a ambição de valorizar a excelência num dos sectores com maior impacto
+        na vida das pessoas, os prémios distinguem o trabalho de agências, profissionais,
+        marcas, instituições, produtoras, estúdios e organizações que transformam a
+        comunicação em saúde no espaço lusófono.
+      </p>
+    </div>
+  </div>
+
+  <!-- procedural glossy forms (capsule + orb), dark surreal -->
+  <div class="forms" aria-hidden="true">
+    <div class="form" data-par="-0.05" style="right:-4%; top:12%;">
+      <div class="capsule" style="--w:clamp(220px,30vw,440px); --h:clamp(96px,12vw,168px); --rot:-26deg;"></div>
+    </div>
+    <div class="form" data-par="0.09" style="right:14%; bottom:10%;">
+      <div class="orb" style="--d:clamp(90px,11vw,150px);"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 3 — POR QUE EXISTE (coração) ============ -->
+<section class="s porque" id="porque" data-scene="2">
+  <!-- "as formas que abrem a seção" : a pharmaceutical capsule splitting open -->
+  <div class="opener" id="opener" aria-hidden="true">
+    <div class="cap-open">
+      <div class="cap-core"></div>
+      <div class="cap-half cap-top"></div>
+      <div class="cap-half cap-bottom"></div>
+    </div>
+    <!-- optional upgrade: drop abertura.mp4 in landpage/ and it auto-overlays -->
+    <video class="opener-video" id="aberturaVideo" src="abertura.mp4" muted loop playsinline></video>
+  </div>
+
+  <div class="wrap porque-wrap">
+    <p class="kicker reveal center">— Por que existe</p>
+    <h2 class="display h-lg center reveal" data-pop>Por que esta<br/>premiação existe.</h2>
+
+    <p class="lead reveal">
+      Hoje, falar de saúde é compreender comportamentos, alegrias, prazeres e dores.
+      Em um mundo onde nosso aprendizado começa no digital, é essencial lembrar que o
+      <em>toque humano</em> faz parte dessa equação.
+    </p>
+
+    <div class="manifesto">
+      <p class="serif reveal">Acharam surreal a criatividade falar a língua da saúde?</p>
+      <p class="serif big reveal">Surreal seria ela <em>não</em> falar.</p>
+      <p class="reveal mt">Porque antes de ser dado, diagnóstico, tecnologia, saúde é <b>relação.</b></p>
+      <p class="serif xl center reveal pop3d" data-pop>A saúde acontece<br/>entre pessoas.</p>
+      <p class="reveal">E criatividade é o jeito de transformar essa relação.</p>
+      <p class="serif big center reveal">Entre pessoas. É onde a saúde acontece.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 4 — CALENDÁRIO ============ -->
+<section class="s calendario" id="calendario" data-scene="3">
+  <div class="wrap">
+    <p class="kicker reveal">— Agenda</p>
+    <h2 class="display h-lg reveal" data-pop>Calendário <span class="grad">2026.</span></h2>
+
+    <ul class="timeline">
+      <li class="reveal">
+        <span class="t-date">15 de junho</span>
+        <span class="t-line" aria-hidden="true"></span>
+        <span class="t-mark">Abertura das inscrições</span>
+      </li>
+      <li class="reveal">
+        <span class="t-date">15 — 26 de junho</span>
+        <span class="t-line" aria-hidden="true"></span>
+        <span class="t-mark">Early bird <em>· desconto de 25%</em></span>
+      </li>
+      <li class="reveal">
+        <span class="t-date">26 jun — 24 jul</span>
+        <span class="t-line" aria-hidden="true"></span>
+        <span class="t-mark">Early bird <em>· desconto de 10%</em></span>
+      </li>
+      <li class="reveal">
+        <span class="t-date">25 de setembro</span>
+        <span class="t-line" aria-hidden="true"></span>
+        <span class="t-mark">Encerramento das inscrições</span>
+      </li>
+      <li class="reveal highlight">
+        <span class="t-date">28 de outubro</span>
+        <span class="t-line" aria-hidden="true"></span>
+        <span class="t-mark">Cerimónia de entrega</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- procedural glossy forms (capsule + orb), dark surreal -->
+  <div class="forms" aria-hidden="true">
+    <div class="form" data-par="0.07" style="left:-5%; bottom:6%;">
+      <div class="capsule" style="--w:clamp(200px,26vw,400px); --h:clamp(88px,11vw,152px); --rot:34deg;"></div>
+    </div>
+    <div class="form" data-par="-0.04" style="left:18%; top:14%;">
+      <div class="orb" style="--d:clamp(70px,8vw,118px);"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 5 — RODAPÉ ============ -->
+<footer class="s rodape" id="rodape" data-scene="4">
+  <div class="foot-cta reveal">
+    <h2 class="display h-md">Inscreve os teus projetos.</h2>
+    <a href="#" class="btn btn-primary lg">Inscrever projeto</a>
+  </div>
+
+  <div class="foot-grid">
+    <div class="foot-brand reveal">
+      <span class="logo-mark big">✦</span>
+      <p>Prémios Lusófonos<br/><em>da Criatividade em Saúde</em></p>
+      <small>Lisbon Awards Group</small>
+    </div>
+    <div class="foot-col reveal">
+      <h4>Navegar</h4>
+      <a href="#">Categorias e subcategorias</a>
+      <a href="#">Regulamento</a>
+      <a href="#">Júri</a>
+      <a href="#rodape">Contactos</a>
+    </div>
+    <div class="foot-col reveal">
+      <h4>Redes</h4>
+      <a href="#">Instagram</a>
+      <a href="#">Facebook</a>
+      <a href="#">LinkedIn</a>
+      <a href="#">TikTok</a>
+    </div>
+    <div class="foot-col reveal">
+      <h4>Contacto</h4>
+      <a href="mailto:paulosantos@lisbonawardsfestival.com">paulosantos@lisbonawardsfestival.com</a>
+      <a href="#">+351 931 714 621</a>
+      <span>Rua Seara Nova 5, Palácio Rosa<br/>1250-002 Lisboa</span>
+    </div>
+  </div>
+
+  <div class="foot-base reveal">
+    © 2026 Prémios Lusófonos da Criatividade. Todos os direitos reservados.
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
