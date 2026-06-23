@@ -1,0 +1,8 @@
+# vídeos descartados (não usados pelo site)
+hero.mp4
+hero1-lightbg-backup.mp4
+
+# temporários
+_*.png
+.DS_Store
+Thumbs.db
