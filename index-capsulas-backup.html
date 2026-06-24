@@ -6,217 +6,878 @@
 <title>Prémios Lusófonos da Criatividade em Saúde · 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --indigo:#180066; --magenta:#730394; --lavender:#8367DF; --orange:#FF7300; --graphite:#4A3F4D;
+  --bg:#050308; --ink:#ECE8F6; --ink-dim:#A89FC4; --ink-faint:#6E6588;
+  --maxw:1180px; --ease:cubic-bezier(.22,.61,.36,1); --ease-out:cubic-bezier(.16,1,.3,1);
+  /* extrusão 3D nítida (degraus sólidos) + glow — pros destaques roxos/lavanda */
+  --hi3d:0 1px 0 #C7B0FF, 0 2px 0 #AD90F2, 0 3px 0 #9173DB, 0 4px 0 #6E51B2, 0 5px 1px rgba(18,7,38,.6), 0 6px 8px rgba(0,0,0,.45), 0 0 20px rgba(150,120,255,.55);
+  /* idem, mas com base escura forte — pros destaques que ficam SOBRE o vídeo (calendário) */
+  --hi3d-v:0 1px 0 #C7B0FF, 0 2px 0 #A488E8, 0 3px 0 #6E52B0, 0 4px 5px rgba(0,0,0,.9), 0 0 4px rgba(0,0,0,.96), 0 0 13px rgba(0,0,0,.85);
+  /* glow laranja forte — pros textos/labels em laranja */
+  --ogl:0 0 8px rgba(255,150,50,.9), 0 0 20px rgba(255,115,0,.65), 0 0 44px rgba(255,115,0,.35);
+  /* idem com base escura — laranja sobre vídeo */
+  --ogl-v:0 0 8px rgba(255,150,50,.85), 0 0 20px rgba(255,115,0,.6), 0 0 5px rgba(0,0,0,.92), 0 2px 8px rgba(0,0,0,.85);
+}
+*{ margin:0; padding:0; box-sizing:border-box; }
+html,body{ height:100%; overflow:hidden; }       /* slide deck — no page scroll */
+html{ background:var(--bg); }
+body{
+  background:
+    radial-gradient(1200px 800px at 75% 5%, rgba(115,3,148,.20), transparent 60%),
+    radial-gradient(1000px 700px at 10% 95%, rgba(24,0,102,.38), transparent 55%),
+    var(--bg);
+  color:var(--ink); font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased;
+}
+em{ font-style:italic; }
+a{ color:inherit; text-decoration:none; }
+::selection{ background:var(--orange); color:#1a0a00; }
+
+/* ---------- fixed video stage (plays per-section; fades out on the dark slides) ---------- */
+.scrub-stage{ position:fixed; inset:0; z-index:0; overflow:hidden; opacity:0; transition:opacity 1.5s ease; }
+body.started .scrub-stage{ opacity:1; }
+body.started.bg-off .scrub-stage{ opacity:0; }   /* seções 3-5 = fundo escuro */
+#scrubCanvas{ position:absolute; inset:0; width:100%; height:100%; display:block; mix-blend-mode:screen; }
+#scrubVideo{ position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+.stage-glow{ position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(55% 55% at 50% 45%, rgba(131,103,223,.10), transparent 70%); }
+
+/* procedural molecules — subtle drifting particles so a paused/looping clip never looks frozen */
+#fxCanvas{ position:fixed; inset:0; z-index:1; width:100%; height:100%; pointer-events:none;
+  mix-blend-mode:screen; opacity:0; transition:opacity 1.6s ease; }
+body.started #fxCanvas{ opacity:.62; }
+
+.core-veil{ position:fixed; inset:0; z-index:1; pointer-events:none; mix-blend-mode:screen;
+  background:
+    radial-gradient(42% 34% at 50% 47%, rgba(131,103,223,.12), rgba(115,3,148,.05) 55%, transparent 76%),
+    radial-gradient(70% 50% at 50% 50%, rgba(24,0,102,.09), transparent 72%); }
+/* a little translucent darken behind the text so it always reads over the busy video */
+.read-dim{ position:fixed; inset:0; z-index:3; pointer-events:none; opacity:0; transition:opacity 1.1s ease;
+  background:radial-gradient(130% 100% at 50% 50%, rgba(5,3,8,.30), rgba(5,3,8,.52) 100%); }
+body.started .read-dim{ opacity:1; }
+.scrim{ position:fixed; inset:0; z-index:3; pointer-events:none;
+  background:radial-gradient(120% 120% at 50% 50%, transparent 52%, rgba(0,0,0,.55) 100%); }
+.grain{ position:fixed; inset:0; z-index:4; pointer-events:none; opacity:.03;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* subtle moving background — only on the footer (minimalist motion) */
+.foot-flow{ position:fixed; inset:0; z-index:1; pointer-events:none; opacity:0; mix-blend-mode:screen;
+  transition:opacity 1.8s ease; background-size:200% 200%;
+  background:
+    radial-gradient(38% 38% at 28% 62%, rgba(131,103,223,.16), transparent 70%),
+    radial-gradient(38% 38% at 72% 38%, rgba(255,115,0,.10), transparent 70%); }
+body.foot-live .foot-flow{ opacity:1; animation:footDrift 20s ease-in-out infinite alternate; }
+@keyframes footDrift{ 0%{ background-position:0% 0%; } 100%{ background-position:100% 100%; } }
+
+/* loader */
+.loader{ position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
+  background:var(--bg); color:var(--ink-faint); font-size:12px; letter-spacing:.3em; text-transform:uppercase; transition:opacity .6s; }
+.loader.gone{ opacity:0; pointer-events:none; }
+
+/* intro = "nada" until the user presses space; then the video fades in and the texts type */
+.intro{ position:fixed; inset:0; z-index:52; display:flex; align-items:center; justify-content:center;
+  text-align:center; transition:opacity 1.2s ease;
+  background:radial-gradient(1000px 720px at 50% 42%, rgba(115,3,148,.16), transparent 62%), var(--bg); }
+.intro img{ width:clamp(86px,13vw,134px); height:auto; opacity:.95;
+  filter:drop-shadow(0 0 26px rgba(131,103,223,.5)); animation:introPulse 3.4s ease-in-out infinite; }
+@keyframes introPulse{ 0%,100%{ transform:translateY(0) scale(1); filter:drop-shadow(0 0 22px rgba(131,103,223,.4)); }
+  50%{ transform:translateY(-6px) scale(1.03); filter:drop-shadow(0 0 34px rgba(255,115,0,.45)); } }
+body.started .intro{ opacity:0; pointer-events:none; }
+body:not(.started) .progress, body:not(.started) .hint{ opacity:0; pointer-events:none; transition:opacity .8s; }
+
+/* ---------- nav ---------- */
+.nav{ position:fixed; top:0; left:0; right:0; z-index:54; display:flex; align-items:center; justify-content:space-between;
+  padding:18px clamp(20px,5vw,56px); background:transparent; border-bottom:1px solid transparent;
+  transition:background .9s ease, border-color .9s ease; }
+body.started .nav{ background:rgba(8,5,15,.55); border-bottom-color:rgba(255,255,255,.05); }
+/* header items reveal one by one — caprichado: fade + desliza de cima + sai de desfoque */
+.nav-reveal{ opacity:0; transform:translateY(-18px); filter:blur(7px);
+  transition:opacity 1.1s ease, transform 1.2s var(--ease-out), filter 1.1s ease; }
+.nav-reveal.in{ opacity:1; transform:none; filter:blur(0); }
+.nav-logo{ display:flex; align-items:center; gap:11px; }
+.logo-mark{ font-size:20px; color:var(--orange); filter:drop-shadow(0 0 10px rgba(255,115,0,.6)); }
+.logo-img{ height:34px; width:auto; display:block; filter:drop-shadow(0 0 10px rgba(131,103,223,.55)); }
+.foot-brand .logo-img{ height:50px; margin-bottom:4px; }
+.logo-txt{ font-size:11.5px; line-height:1.25; letter-spacing:.04em; text-transform:uppercase; font-weight:600; }
+.logo-txt em{ color:var(--ink-dim); font-weight:400; font-style:normal; }
+.nav-links{ position:relative; display:flex; gap:28px; list-style:none; }
+.nav-links a{ position:relative; z-index:1; font-size:13px; color:var(--ink-dim); transition:color .4s; cursor:pointer; }
+.nav-links a:hover{ color:var(--ink); }
+.nav-links a.active{ color:#fff; }
+/* indicador laranja que ENVOLVE a aba ativa e DESLIZA suave entre as abas */
+.nav-ind{ position:absolute; top:50%; left:0; width:0; height:30px; transform:translateY(-50%); z-index:0;
+  border:1px solid var(--orange); border-radius:40px; background:rgba(255,115,0,.12);
+  box-shadow:0 0 16px rgba(255,115,0,.5), inset 0 0 12px rgba(255,115,0,.18);
+  opacity:0; pointer-events:none;
+  transition:left .6s var(--ease-out), width .6s var(--ease-out), opacity .45s ease; }
+.nav-cta{ font-size:13px; font-weight:600; padding:10px 18px; border:1px solid rgba(255,255,255,.18);
+  border-radius:40px; transition:.3s var(--ease); }
+.nav-cta:hover{ background:var(--orange); border-color:var(--orange); color:#1a0a00; box-shadow:0 0 24px rgba(255,115,0,.5); }
+
+/* ---------- progress + hint ---------- */
+.progress{ position:fixed; top:0; left:0; right:0; height:2px; z-index:45; background:rgba(255,255,255,.06); }
+.progress span{ display:block; height:100%; width:0%; transition:width .8s var(--ease);
+  background:linear-gradient(90deg,var(--lavender),var(--magenta),var(--orange)); box-shadow:0 0 14px var(--magenta); }
+.hint{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:45;
+  display:flex; gap:18px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint);
+  background:rgba(8,5,15,.78); padding:8px 16px; border-radius:40px; border:1px solid rgba(255,255,255,.06); }
+.hint b{ color:var(--lavender); }
+/* H esconde só a barra de progresso + a dica — o cabeçalho (nav) PERMANECE */
+.hud-hidden .progress,.hud-hidden .hint{ opacity:0; pointer-events:none; }
+/* finale: some com tudo (nav/HUD) deixando só a barra de busca */
+body.finale .nav, body.finale .progress, body.finale .hint{ opacity:0; pointer-events:none; transition:opacity .8s ease; }
+
+/* ---------- slide deck ---------- */
+.deck{ position:fixed; inset:0; z-index:5; }
+.slide{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  padding:104px clamp(20px,5vw,56px) 80px; opacity:0; visibility:hidden; pointer-events:none;
+  transition:opacity .9s var(--ease); }
+.slide.active{ opacity:1; visibility:visible; }
+.slide.center{ text-align:center; }
+.cam{ width:100%; max-width:var(--maxw); margin:0 auto; will-change:transform, filter, opacity; transform-origin:50% 50%; }
+.slide.center .cam{ display:flex; flex-direction:column; align-items:center; }
+
+/* hero: logo lands beside the title */
+.hero-copy{ display:flex; align-items:center; gap:clamp(18px,3.5vw,52px); text-align:left; }
+.hero-logo{ height:clamp(120px,18vh,190px); width:auto; flex:none; opacity:0;
+  filter:drop-shadow(0 0 20px rgba(131,103,223,.6)); }
+.hero-logo.lit{ opacity:1; }                 /* instant swap from the flying intro logo (seamless) */
+@media (max-width:760px){ .hero-copy{ flex-direction:column; text-align:center; gap:16px; } }
+
+/* readable backing for text — translucent tinted panel (no blur, weak PC) */
+.plate{ position:relative; }
+.plate::before{ content:''; position:absolute; inset:-38px -58px; z-index:-1; border-radius:42px;
+  background:radial-gradient(78% 78% at 50% 45%, rgba(14,8,26,.62), rgba(5,3,8,.40) 60%, rgba(5,3,8,.14) 100%);
+  border:1px solid rgba(255,255,255,.05);
+  box-shadow:0 30px 80px rgba(0,0,0,.4), inset 0 0 70px rgba(131,103,223,.05); }
+
+/* ---------- typewriter ---------- */
+.word{ display:inline-block; white-space:nowrap; }
+.ch{ display:inline-block; white-space:pre; opacity:0; transform:translateY(.16em); }
+.ch.on{ animation:chIn .5s var(--ease-out) both; }
+@keyframes chIn{
+  0%{ opacity:0; transform:translateY(.18em) scale(1.05); filter:brightness(2.3);
+      text-shadow:0 0 18px rgba(131,103,223,.95), 0 0 40px rgba(115,3,148,.6); }
+  55%{ opacity:1; }
+  100%{ opacity:1; transform:none; filter:none; } }
+.gch{ display:inline; transform:none; }
+
+/* ---------- cinematic exits (block-level, no cheap per-char scatter) ---------- */
+/* a leaving block sweeps to the side as a motion-blur "vulto" + fades */
+.swoosh{ animation:swoosh .92s var(--ease) both; }
+@keyframes swoosh{ 0%{ opacity:1; }
+  100%{ opacity:0; transform:translateX(var(--ox,-12%)) scale(.985); filter:blur(16px); } }
+
+/* ---------- typography ---------- */
+.eyebrow{ font-size:13px; letter-spacing:.28em; text-transform:uppercase; color:#FF8A2E; font-weight:600; margin-bottom:22px;
+  text-shadow:var(--ogl); }
+.display{ font-family:'Space Grotesk',sans-serif; font-weight:700; line-height:.95; letter-spacing:-.02em;
+  text-shadow:0 2px 14px rgba(0,0,0,.6), 0 0 20px rgba(131,103,223,.30); }
+h1.display{ font-size:clamp(3.5rem,11vw,9rem); }
+.h-lg{ font-size:clamp(2.4rem,6vw,5rem); }
+.h-md{ font-size:clamp(2rem,5vw,3.4rem); }
+.grad{ font-size:1.08em; font-weight:700; color:#E4D7FF; -webkit-text-fill-color:#E4D7FF;
+  text-shadow:var(--hi3d); }
+.d3{ text-shadow:
+   -1px -1px 0 rgba(255,255,255,.22),
+    1px 1px 0 rgba(44,25,66,.97), 2px 2px 0 rgba(38,21,58,.94), 3px 3px 0 rgba(32,17,50,.92),
+    4px 4px 0 rgba(26,14,42,.9), 5px 5px 0 rgba(20,11,34,.87), 6px 7px 2px rgba(13,7,24,.82),
+    8px 11px 22px rgba(0,0,0,.5),
+    0 0 24px rgba(150,120,255,.6), 0 0 60px rgba(131,103,223,.34); }
+.sub{ font-size:clamp(1.3rem,3vw,2.2rem); font-weight:400; margin-top:24px; color:var(--ink); }
+/* lavender/highlight accents — bigger than surrounding text + bright glow (destaque) */
+.sub em{ font-style:normal; font-weight:700; font-size:1.34em; color:#E4D7FF;
+  text-shadow:var(--hi3d); }
+.body{ font-size:clamp(1rem,1.4vw,1.18rem); line-height:1.7; color:var(--ink-dim); max-width:48ch; }
+.body b{ color:var(--ink); font-weight:600; }
+/* dramatic phrases — now Space Grotesk (legible, professional), big + glowing */
+.serif{ font-family:'Space Grotesk',sans-serif; font-style:normal; }
+.serif.xl{ font-size:clamp(2.6rem,7.4vw,5.4rem); line-height:1.06; font-weight:600; letter-spacing:-.01em; color:#fff; text-shadow:0 0 50px rgba(131,103,223,.5); }
+.serif.big{ font-size:clamp(1.6rem,3.6vw,2.7rem); font-weight:500; line-height:1.28; color:var(--ink); }
+.serif em{ font-style:normal; font-weight:700; font-size:1.16em; color:#E4D7FF;
+  text-shadow:var(--hi3d); }
+
+/* ---------- slide 2 (sobre) — frase por frase: digita, apaga (backspace), próxima ---------- */
+.sline-stack{ position:relative; width:100%; max-width:36ch; min-height:42vh; margin:26px auto 0; }
+.sline{ position:absolute; left:0; right:0; top:50%; transform:translateY(-50%);
+  font-size:clamp(1.5rem,2.8vw,2.3rem); line-height:1.45; font-weight:400; color:var(--ink); text-align:center; opacity:0; }
+.sline.on{ opacity:1; }
+.sline b, .sline em{ font-style:normal; font-weight:700; font-size:1.08em; color:#E4D7FF;
+  text-shadow:var(--hi3d); }
+
+/* ---------- slide 3 (porque) — texto em CAMADAS: digita 2-4 frases, fade out, próxima ---------- */
+.layer{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:clamp(14px,2.6vh,32px); padding:0 7vw; text-align:center; opacity:0; pointer-events:none; will-change:filter, opacity; }
+.layer.on{ opacity:1; }                                  /* visível enquanto digita (as letras entram uma a uma) */
+.layer.out{ animation:layerOut 1s var(--ease) forwards; }
+@keyframes layerOut{ 0%{ opacity:1; filter:blur(0); } 100%{ opacity:0; filter:blur(13px); transform:scale(1.03) translateY(-2.5%); } }
+.layer .line{ font-size:clamp(1.3rem,2.6vw,2.05rem); line-height:1.5; font-weight:400; color:var(--ink); max-width:30ch; margin-inline:auto; }
+.layer .line em{ font-style:normal; font-weight:700; font-size:1.12em; color:#E4D7FF; text-shadow:var(--hi3d); }
+
+/* recap final — reúne tudo em colunas (estilo seção de landpage) */
+.recap{ position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center;
+  padding:96px clamp(20px,6vw,80px); opacity:0; pointer-events:none; }
+.recap.on{ animation:recapIn 1.3s var(--ease-out) both; }
+@keyframes recapIn{ 0%{ opacity:0; transform:translateY(22px); filter:blur(9px); } 100%{ opacity:1; transform:none; filter:blur(0); } }
+.recap.out{ animation:layerOut 1s var(--ease) forwards; }
+.recap-title{ font-size:clamp(1.9rem,4.4vw,3.3rem); line-height:1.02; text-align:center; margin:14px 0 34px; }
+.recap-cols{ columns:2; column-gap:clamp(30px,5vw,64px); max-width:920px; width:100%; }
+.recap-cols p{ break-inside:avoid; margin-bottom:18px; font-size:clamp(1rem,1.35vw,1.18rem); line-height:1.7; color:var(--ink-dim); }
+.recap-cols p:first-child{ margin-top:0; }
+.recap-cols em{ font-style:normal; font-weight:700; color:#E4D7FF; text-shadow:var(--hi3d); }
+@media(max-width:760px){ .recap-cols{ columns:1; } }
+
+/* ---------- slide 4 (calendar) ---------- */
+.cal-wrap{ max-width:780px; margin-inline:auto; width:100%; }
+.timeline{ list-style:none; margin-top:40px; }
+.timeline li{ display:grid; grid-template-columns:240px 1fr; align-items:center; gap:24px; padding:20px 0;
+  border-top:1px solid rgba(255,255,255,.12); }
+.timeline li:last-child{ border-bottom:1px solid rgba(255,255,255,.12); }
+/* halo escuro bem colado (tipo stroke) = destaca a letra SEM escurecer o vídeo atrás */
+.t-date{ font-family:'Space Grotesk',sans-serif; font-size:clamp(1.1rem,2vw,1.45rem); font-weight:700; color:#E4D7FF;
+  text-shadow:var(--hi3d-v); }
+.t-mark{ font-size:clamp(1.02rem,1.6vw,1.32rem); color:#fff; font-weight:600;
+  text-shadow:0 0 4px rgba(0,0,0,.96), 0 0 4px rgba(0,0,0,.96), 0 0 12px rgba(0,0,0,.92), 0 2px 6px rgba(0,0,0,.9); }
+.t-mark em{ color:#FF8A2E; font-style:normal; font-weight:700; font-size:.92em; text-shadow:var(--ogl-v); }
+.timeline li.hl .t-date{ color:#FF8A2E; text-shadow:var(--ogl-v); }
+.timeline li.hl .t-mark{ font-weight:700; }
+.timeline li{ border-top-color:rgba(255,255,255,.22); }   /* divisórias um tico mais visíveis */
+/* título + eyebrow do calendário também ganham halo (vídeo é brilhante no topo) */
+#s4 .eyebrow{ color:#FF8A2E; text-shadow:var(--ogl-v); }
+#s4 .display{ text-shadow:0 0 5px rgba(0,0,0,.92), 0 0 14px rgba(0,0,0,.85), 0 2px 8px rgba(0,0,0,.85); }
+#s4 .grad{ color:#E4D7FF; -webkit-text-fill-color:#E4D7FF; text-shadow:var(--hi3d-v); }
+
+/* ---------- slide 5 (footer) ---------- */
+/* rodapé compacto — não pode colidir com o cabeçalho fixo */
+#s5{ align-items:flex-start; }                          /* começa logo abaixo da nav, nunca por baixo dela */
+#s5 .cam{ margin-top:6vh; }
+.foot{ max-width:820px; margin-inline:auto; width:100%; }
+.foot h2.h-md{ font-size:clamp(1.6rem,3.4vw,2.5rem); }
+.cta{ margin-top:22px; display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+.btn{ display:inline-block; font-size:15px; font-weight:600; padding:15px 34px; border-radius:44px; transition:.35s var(--ease); border:1px solid transparent; }
+.btn-primary{ background:var(--orange); color:#190a00; box-shadow:0 8px 30px rgba(255,115,0,.4); }
+.btn-primary:hover{ transform:translateY(-3px); box-shadow:0 14px 44px rgba(255,115,0,.6); }
+.foot-grid{ display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:24px; text-align:left;
+  margin-top:34px; padding-top:26px; border-top:1px solid rgba(255,255,255,.1); }
+.foot-brand p{ font-family:'Space Grotesk',sans-serif; font-weight:600; margin:10px 0 5px; line-height:1.3; }
+.foot-brand em{ color:var(--ink-dim); font-weight:400; }
+.foot-brand small{ color:var(--ink-faint); font-size:12px; letter-spacing:.1em; text-transform:uppercase; }
+.foot-col h4{ font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:13px; font-weight:600; }
+.foot-col a,.foot-col span{ display:block; font-size:14px; color:var(--ink-dim); margin-bottom:9px; line-height:1.5; transition:color .3s; }
+.foot-col a:hover{ color:var(--orange); }
+.foot-base{ margin-top:24px; font-size:12px; color:var(--ink-faint); letter-spacing:.06em; }
+.rise2{ opacity:0; transform:translateY(24px); filter:blur(8px);
+  transition:opacity 1.1s var(--ease-out), transform 1.2s var(--ease-out), filter 1.1s ease; }
+.rise2.in{ opacity:1; transform:none; filter:blur(0); }
+
+/* ---------- finale: mouse desliza, clica no botão, barra de busca digita o link ---------- */
+.btn.btn-press{ transform:scale(.94); box-shadow:0 0 32px rgba(255,115,0,.85); border-color:var(--orange); }
+#s5 .cam{ transition:opacity .9s var(--ease); }    /* o rodapé some no clique, deixando só a barra */
+.mouse-cur{ position:fixed; left:0; top:0; z-index:58; width:26px; height:26px; pointer-events:none; opacity:0;
+  transition:opacity .5s ease;
+  filter:drop-shadow(0 3px 5px rgba(0,0,0,.6)) drop-shadow(0 0 10px rgba(255,170,70,.85)); }
+.mouse-cur svg{ width:100%; height:100%; display:block; }
+.mouse-cur.click::after{ content:''; position:absolute; left:3px; top:3px; width:22px; height:22px; border-radius:50%;
+  border:2px solid rgba(255,170,70,.95); transform:translate(-50%,-50%) scale(0); animation:curClick .55s ease-out; }
+@keyframes curClick{ 0%{ transform:translate(-50%,-50%) scale(.2); opacity:.95; } 100%{ transform:translate(-50%,-50%) scale(3.4); opacity:0; } }
+.finalsearch{ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%) scale(.92); z-index:47;
+  display:flex; align-items:center; gap:15px; width:min(680px,86vw); padding:17px 26px;
+  background:rgba(10,6,18,.92); border:2px solid var(--orange); border-radius:999px; overflow:hidden;
+  box-shadow:0 0 34px rgba(255,115,0,.42), 0 0 96px rgba(131,103,223,.22), inset 0 0 26px rgba(0,0,0,.5);
+  opacity:0; pointer-events:none; transition:opacity .6s var(--ease-out), transform .6s var(--ease-out); }
+.finalsearch::before{ content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent, rgba(255,170,90,.7), transparent); animation:fsShim 2.6s ease-in-out infinite; }
+@keyframes fsShim{ 0%{ transform:translateX(-100%); } 100%{ transform:translateX(100%); } }
+.finalsearch.show{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+.fs-ico{ width:23px; height:23px; flex:none; color:var(--orange); filter:drop-shadow(0 0 8px rgba(255,115,0,.6)); }
+.fs-text{ font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace; font-size:clamp(15px,1.9vw,21px); color:var(--ink); white-space:nowrap; }
+.fs-caret{ width:2px; height:1.05em; background:var(--orange); box-shadow:0 0 8px var(--orange); flex:none; animation:fsBlink 1s steps(1) infinite; }
+@keyframes fsBlink{ 50%{ opacity:0; } }
+
+@media (max-width:880px){
+  .nav-links{ display:none; }
+  .sobre-stage{ flex-direction:column; gap:30px; }
+  .timeline li{ grid-template-columns:1fr; gap:5px; padding:16px 0; }
+  .foot-grid{ grid-template-columns:1fr; gap:24px; }
+}
+/* NÃO usar prefers-reduced-motion aqui: é uma peça cinematográfica (vai ser gravada);
+   o "reduzir animações" do sistema matava TODAS as transições (logo teleportava, header/vídeo surgiam do nada). */
+</style>
 </head>
 <body>
 
-<!-- film grain + vignette overlays -->
-<div class="grain" aria-hidden="true"></div>
-<div class="vignette" aria-hidden="true"></div>
+<div class="loader" id="loader">a preparar a sequência…</div>
 
-<!-- iridescent shimmer / particle layer -->
-<canvas id="fx" aria-hidden="true"></canvas>
-
-<!-- scroll progress -->
-<div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
-
-<!-- top nav -->
-<nav class="nav" id="nav">
-  <div class="nav-logo">
-    <span class="logo-mark">✦</span>
-    <span class="logo-txt">Prémios&nbsp;Lusófonos<br/><em>da Criatividade em Saúde</em></span>
-  </div>
-  <ul class="nav-links">
-    <li><a href="#sobre">A categoria</a></li>
-    <li><a href="#porque">Por que existe</a></li>
-    <li><a href="#calendario">Calendário</a></li>
-    <li><a href="#rodape">Contactos</a></li>
-  </ul>
-  <a href="#" class="nav-cta">Inscrever projeto</a>
-</nav>
-
-<!-- cinematic control hint -->
-<div class="cine-hint" id="cineHint">
-  <span><b>Espaço</b> tocar cinemático</span>
-  <span><b>H</b> ocultar HUD</span>
+<!-- blank intro: only the symbol + a prompt; press Espaço to start -->
+<div class="intro" id="intro">
+  <img id="introLogo" src="logo-symbol.png" alt="" onerror="this.style.display='none'" />
 </div>
 
-<!-- ============ SECTION 1 — HERO ============ -->
-<section class="s hero" id="hero" data-scene="0">
-  <div class="hero-media" id="heroMedia">
-    <video class="hero-video-bg" src="hero1.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
-    <video class="hero-video" id="heroVideo" src="hero1.mp4" autoplay muted loop playsinline></video>
+<!-- fixed video stage (plays per section) -->
+<div class="scrub-stage">
+  <canvas id="scrubCanvas"></canvas>
+  <video id="scrubVideo" muted playsinline preload="auto" src="sequence.mp4"></video>
+  <div class="stage-glow"></div>
+</div>
+<canvas id="fxCanvas"></canvas>
+<div class="core-veil"></div>
+<div class="foot-flow"></div>
+<div class="read-dim"></div>
+<div class="scrim"></div>
+<div class="grain"></div>
+
+<!-- nav -->
+<nav class="nav" id="nav">
+  <div class="nav-logo">
+    <img class="logo-img nav-reveal" src="logo-symbol.png" alt="" onerror="this.style.display='none'" />
+    <span class="logo-txt nav-reveal">Prémios&nbsp;Lusófonos<br/><em>da Criatividade em Saúde</em></span>
   </div>
-  <div class="hero-glow" aria-hidden="true"></div>
+  <ul class="nav-links">
+    <span class="nav-ind" id="navInd"></span>
+    <li class="nav-reveal"><a data-go="1">A categoria</a></li>
+    <li class="nav-reveal"><a data-go="2">Por que existe</a></li>
+    <li class="nav-reveal"><a data-go="3">Calendário</a></li>
+    <li class="nav-reveal"><a data-go="4">Contactos</a></li>
+  </ul>
+  <a href="#" class="nav-cta nav-reveal">Inscrever projeto</a>
+</nav>
 
-  <div class="hero-content tilt" data-tilt>
-    <p class="eyebrow reveal">Edição 2026 · Portugal</p>
-    <h1 class="display pop3d reveal" data-pop>
-      <span class="line">Entre</span>
-      <span class="line">pessoas.</span>
-    </h1>
-    <p class="hero-sub reveal">A saúde acontece <em>entre pessoas.</em></p>
-    <div class="hero-cta reveal">
-      <a href="#" class="btn btn-primary">Inscrever projeto</a>
-      <a href="#sobre" class="btn btn-ghost">Conhecer a categoria</a>
+<div class="progress"><span id="progressBar"></span></div>
+<div class="hint"><span><b>→</b> ou <b>Espaço</b> avança</span><span><b>←</b> volta</span><span><b>M</b> som <span id="sndState">ON</span></span><span><b>H</b> HUD</span></div>
+
+<!-- ============ slide deck ============ -->
+<div class="deck" id="deck">
+
+  <!-- 1 · HERO (hero1 looping) -->
+  <section class="slide center" id="s1">
+    <div class="cam">
+      <div class="copy plate hero-copy">
+        <img class="hero-logo" src="logo-symbol.png" alt="" onerror="this.style.display='none'" />
+        <div class="hero-text">
+          <p class="eyebrow type">Edição 2026 · Portugal</p>
+          <h1 class="display d3 type"><span>Entre</span><br/><span>pessoas.</span></h1>
+          <p class="sub type">A saúde acontece <em>entre pessoas.</em></p>
+        </div>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ============ SECTION 2 — SOBRE A CATEGORIA ============ -->
-<section class="s sobre" id="sobre" data-scene="1">
-  <div class="wrap">
-    <p class="kicker reveal">— A categoria</p>
-    <h2 class="display h-lg reveal" data-pop>
-      Uma premiação dedicada à<br/><span class="grad">criatividade em saúde.</span>
-    </h2>
-    <div class="cols">
-      <p class="body reveal">
-        Os <b>Prémios Lusófonos da Criatividade em Saúde</b> são um festival internacional,
-        sediado em Portugal, dedicado a reconhecer os melhores projetos de criatividade,
-        comunicação e inovação na área da saúde nos países de língua oficial portuguesa.
-      </p>
-      <p class="body reveal">
-        Criados com a ambição de valorizar a excelência num dos sectores com maior impacto
-        na vida das pessoas, os prémios distinguem o trabalho de agências, profissionais,
-        marcas, instituições, produtoras, estúdios e organizações que transformam a
-        comunicação em saúde no espaço lusófono.
-      </p>
+  <!-- 2 · SOBRE (camera pans between two excerpts, over hero2 frozen at last frame) -->
+  <section class="slide center" id="s2">
+    <div class="cam" id="cam2">
+      <p class="eyebrow type" id="sobreEyebrow">A categoria</p>
+      <div class="sline-stack">
+        <p class="sline type">Os <b>Prémios Lusófonos da Criatividade em Saúde</b> são um festival internacional, sediado em <em>Portugal</em>.</p>
+        <p class="sline type">Dedicado a reconhecer os melhores projetos de <em>criatividade, comunicação e inovação</em> na área da saúde, nos países de língua oficial portuguesa.</p>
+        <p class="sline type">Criados com a ambição de valorizar a <em>excelência</em> num dos sectores com maior impacto na vida das pessoas.</p>
+        <p class="sline type">Distinguem o trabalho de agências, profissionais, marcas, instituições, produtoras, estúdios e organizações</p>
+        <p class="sline type">que transformam a <em>comunicação em saúde</em> no espaço lusófono.</p>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- procedural glossy forms (capsule + orb), dark surreal -->
-  <div class="forms" aria-hidden="true">
-    <div class="form" data-par="-0.05" style="right:-4%; top:12%;">
-      <div class="capsule" style="--w:clamp(220px,30vw,440px); --h:clamp(96px,12vw,168px); --rot:-26deg;"></div>
+  <!-- 3 · POR QUE EXISTE — dramatic beats (dark bg) -->
+  <section class="slide center" id="s3">
+    <div class="layer" data-layer="0">
+      <p class="eyebrow type">Por que existe</p>
+      <h2 class="display h-lg type">Por que esta premiação existe.</h2>
     </div>
-    <div class="form" data-par="0.09" style="right:14%; bottom:10%;">
-      <div class="orb" style="--d:clamp(90px,11vw,150px);"></div>
+    <div class="layer" data-layer="1">
+      <p class="line type">Hoje, falar de saúde é compreender comportamentos, alegrias, prazeres e dores.</p>
+      <p class="line type">Em um mundo onde nosso aprendizado começa no digital, é essencial lembrar que o <em>toque humano</em> faz parte dessa equação.</p>
     </div>
-  </div>
-</section>
-
-<!-- ============ SECTION 3 — POR QUE EXISTE (coração) ============ -->
-<section class="s porque" id="porque" data-scene="2">
-  <!-- "as formas que abrem a seção" : a pharmaceutical capsule splitting open -->
-  <div class="opener" id="opener" aria-hidden="true">
-    <div class="cap-open">
-      <div class="cap-core"></div>
-      <div class="cap-half cap-top"></div>
-      <div class="cap-half cap-bottom"></div>
+    <div class="layer" data-layer="2">
+      <p class="serif big type">Acharam surreal a criatividade falar a língua da saúde?</p>
+      <p class="serif xl d3 type">Surreal seria ela <em>não</em> falar.</p>
     </div>
-    <!-- optional upgrade: drop abertura.mp4 in landpage/ and it auto-overlays -->
-    <video class="opener-video" id="aberturaVideo" src="abertura.mp4" muted loop playsinline></video>
-  </div>
-
-  <div class="wrap porque-wrap">
-    <p class="kicker reveal center">— Por que existe</p>
-    <h2 class="display h-lg center reveal" data-pop>Por que esta<br/>premiação existe.</h2>
-
-    <p class="lead reveal">
-      Hoje, falar de saúde é compreender comportamentos, alegrias, prazeres e dores.
-      Em um mundo onde nosso aprendizado começa no digital, é essencial lembrar que o
-      <em>toque humano</em> faz parte dessa equação.
-    </p>
-
-    <div class="manifesto">
-      <p class="serif reveal">Acharam surreal a criatividade falar a língua da saúde?</p>
-      <p class="serif big reveal">Surreal seria ela <em>não</em> falar.</p>
-      <p class="reveal mt">Porque antes de ser dado, diagnóstico, tecnologia, saúde é <b>relação.</b></p>
-      <p class="serif xl center reveal pop3d" data-pop>A saúde acontece<br/>entre pessoas.</p>
-      <p class="reveal">E criatividade é o jeito de transformar essa relação.</p>
-      <p class="serif big center reveal">Entre pessoas. É onde a saúde acontece.</p>
+    <div class="layer" data-layer="3">
+      <p class="serif big type">Porque antes de ser dado, diagnóstico, tecnologia, saúde é <em>relação.</em></p>
+      <p class="serif big type">A saúde acontece <em>entre pessoas.</em></p>
+      <p class="serif big type">E criatividade é o jeito de transformar essa relação.</p>
+      <p class="serif big d3 type">Entre pessoas. É onde a saúde acontece.</p>
     </div>
-  </div>
-</section>
-
-<!-- ============ SECTION 4 — CALENDÁRIO ============ -->
-<section class="s calendario" id="calendario" data-scene="3">
-  <div class="wrap">
-    <p class="kicker reveal">— Agenda</p>
-    <h2 class="display h-lg reveal" data-pop>Calendário <span class="grad">2026.</span></h2>
-
-    <ul class="timeline">
-      <li class="reveal">
-        <span class="t-date">15 de junho</span>
-        <span class="t-line" aria-hidden="true"></span>
-        <span class="t-mark">Abertura das inscrições</span>
-      </li>
-      <li class="reveal">
-        <span class="t-date">15 — 26 de junho</span>
-        <span class="t-line" aria-hidden="true"></span>
-        <span class="t-mark">Early bird <em>· desconto de 25%</em></span>
-      </li>
-      <li class="reveal">
-        <span class="t-date">26 jun — 24 jul</span>
-        <span class="t-line" aria-hidden="true"></span>
-        <span class="t-mark">Early bird <em>· desconto de 10%</em></span>
-      </li>
-      <li class="reveal">
-        <span class="t-date">25 de setembro</span>
-        <span class="t-line" aria-hidden="true"></span>
-        <span class="t-mark">Encerramento das inscrições</span>
-      </li>
-      <li class="reveal highlight">
-        <span class="t-date">28 de outubro</span>
-        <span class="t-line" aria-hidden="true"></span>
-        <span class="t-mark">Cerimónia de entrega</span>
-      </li>
-    </ul>
-  </div>
-
-  <!-- procedural glossy forms (capsule + orb), dark surreal -->
-  <div class="forms" aria-hidden="true">
-    <div class="form" data-par="0.07" style="left:-5%; bottom:6%;">
-      <div class="capsule" style="--w:clamp(200px,26vw,400px); --h:clamp(88px,11vw,152px); --rot:34deg;"></div>
+    <!-- recap: reúne tudo que foi digitado, organizado em colunas (estilo seção de landpage) -->
+    <div class="recap" data-recap>
+      <p class="eyebrow">Por que existe</p>
+      <h3 class="recap-title display">Por que esta premiação <span class="grad">existe.</span></h3>
+      <div class="recap-cols">
+        <p>Hoje, falar de saúde é compreender comportamentos, alegrias, prazeres e dores. Em um mundo onde nosso aprendizado começa no digital, é essencial lembrar que o <em>toque humano</em> faz parte dessa equação.</p>
+        <p>Acharam surreal a criatividade falar a língua da saúde? <em>Surreal seria ela não falar.</em> Porque antes de ser dado, diagnóstico, tecnologia, saúde é <em>relação</em>.</p>
+        <p>A saúde acontece entre pessoas. E criatividade é o jeito de transformar essa relação.</p>
+        <p><em>Entre pessoas.</em> É onde a saúde acontece.</p>
+      </div>
     </div>
-    <div class="form" data-par="-0.04" style="left:18%; top:14%;">
-      <div class="orb" style="--d:clamp(70px,8vw,118px);"></div>
-    </div>
-  </div>
-</section>
+  </section>
 
-<!-- ============ SECTION 5 — RODAPÉ ============ -->
-<footer class="s rodape" id="rodape" data-scene="4">
-  <div class="foot-cta reveal">
-    <h2 class="display h-md">Inscreve os teus projetos.</h2>
-    <a href="#" class="btn btn-primary lg">Inscrever projeto</a>
-  </div>
+  <!-- 4 · CALENDÁRIO (dark bg now; SLOT p/ calendario.mp4 — moldura sendo desenhada) -->
+  <section class="slide center" id="s4">
+    <div class="cam">
+      <div class="cal-wrap">
+        <p class="eyebrow type">Agenda</p>
+        <h2 class="display h-lg type">Calendário <span class="grad">2026.</span></h2>
+        <ul class="timeline">
+          <li><span class="t-date type">15 de junho</span><span class="t-mark type">Abertura das inscrições</span></li>
+          <li><span class="t-date type">15 — 26 de junho</span><span class="t-mark type">Early bird <em>· desconto de 25%</em></span></li>
+          <li><span class="t-date type">26 jun — 24 jul</span><span class="t-mark type">Early bird <em>· desconto de 10%</em></span></li>
+          <li><span class="t-date type">25 de setembro</span><span class="t-mark type">Encerramento das inscrições</span></li>
+          <li class="hl"><span class="t-date type">28 de outubro</span><span class="t-mark type">Cerimónia de entrega</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
-  <div class="foot-grid">
-    <div class="foot-brand reveal">
-      <span class="logo-mark big">✦</span>
-      <p>Prémios Lusófonos<br/><em>da Criatividade em Saúde</em></p>
-      <small>Lisbon Awards Group</small>
+  <!-- 5 · RODAPÉ (minimalist; subtle moving bg) -->
+  <section class="slide center" id="s5">
+    <div class="cam">
+      <div class="foot">
+        <h2 class="display h-md rise2">Inscreve os teus<br/>projetos.</h2>
+        <div class="cta rise2"><a href="#" class="btn btn-primary">Inscrever projeto</a></div>
+        <div class="foot-grid">
+          <div class="foot-brand">
+            <img class="logo-img rise2" src="logo-symbol.png" alt="" onerror="this.style.display='none'" />
+            <p class="rise2">Prémios Lusófonos<br/><em>da Criatividade em Saúde</em></p>
+            <small class="rise2">Lisbon Awards Group</small>
+          </div>
+          <div class="foot-col">
+            <h4 class="rise2">Navegar</h4>
+            <a class="rise2" href="#">Categorias e subcategorias</a>
+            <a class="rise2" href="#">Regulamento</a>
+            <a class="rise2" href="#">Júri</a>
+            <a class="rise2" href="#">Contactos</a>
+          </div>
+          <div class="foot-col">
+            <h4 class="rise2">Redes</h4>
+            <a class="rise2" href="#">Instagram</a>
+            <a class="rise2" href="#">Facebook</a>
+            <a class="rise2" href="#">LinkedIn</a>
+            <a class="rise2" href="#">TikTok</a>
+          </div>
+        </div>
+        <div class="foot-base rise2">© 2026 Prémios Lusófonos da Criatividade. Todos os direitos reservados.</div>
+      </div>
     </div>
-    <div class="foot-col reveal">
-      <h4>Navegar</h4>
-      <a href="#">Categorias e subcategorias</a>
-      <a href="#">Regulamento</a>
-      <a href="#">Júri</a>
-      <a href="#rodape">Contactos</a>
-    </div>
-    <div class="foot-col reveal">
-      <h4>Redes</h4>
-      <a href="#">Instagram</a>
-      <a href="#">Facebook</a>
-      <a href="#">LinkedIn</a>
-      <a href="#">TikTok</a>
-    </div>
-    <div class="foot-col reveal">
-      <h4>Contacto</h4>
-      <a href="mailto:paulosantos@lisbonawardsfestival.com">paulosantos@lisbonawardsfestival.com</a>
-      <a href="#">+351 931 714 621</a>
-      <span>Rua Seara Nova 5, Palácio Rosa<br/>1250-002 Lisboa</span>
-    </div>
-  </div>
+  </section>
 
-  <div class="foot-base reveal">
-    © 2026 Prémios Lusófonos da Criatividade. Todos os direitos reservados.
-  </div>
-</footer>
+</div>
 
-<script src="app.js"></script>
+<!-- finale overlays: mouse + barra de busca -->
+<div class="mouse-cur" id="mouseCur" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="#fff" stroke="#190a00" stroke-width="1.2"><path d="M4 2 L4 19 L9 14.5 L12 21 L15 19.5 L12 13 L19 13 Z"/></svg>
+</div>
+<div class="finalsearch" id="finalSearch" aria-hidden="true">
+  <svg class="fs-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+  <span class="fs-text" id="fsText"></span>
+  <span class="fs-caret"></span>
+</div>
+
+<script>
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const video=document.getElementById('scrubVideo');
+const canvas=document.getElementById('scrubCanvas');
+const cx=canvas.getContext('2d');
+const fx=document.getElementById('fxCanvas');
+const fcx=fx.getContext('2d');
+const cam2=document.getElementById('cam2');
+const progressBar=document.getElementById('progressBar');
+const loader=document.getElementById('loader');
+const sndState=document.getElementById('sndState');
+
+const slideEls=[...document.querySelectorAll('.slide')];
+const SLIDES=slideEls.length;
+const CANVAS_CAP=1600;
+const TYPE_MS=42;                 // ms per letter
+
+/* video segments (sequence.mp4 = hero1+hero2+hero3+hero4, ~40s) */
+const HERO_A=0.0, HERO_B=9.6;     // hero1 — loops on slide 1
+const SOBRE_A=9.7, SOBRE_B=19.3;  // hero2 — plays ONCE then freezes on its last frame (slide 2)
+
+let started=false, current=-1;
+let token={cancelled:true};
+let loopA=0, loopB=0, looping=false, playStopAt=0, stageVisible=false, dirty=true, duration=0, ready=false;
+
+/* dedicated clips: hero3 (ink/connection map, S3) + hero4 (calendar mould + hands, S4). Each starts from the previous last frame → seamless */
+const video3=document.createElement('video'); video3.muted=true; video3.playsInline=true; video3.preload='auto'; video3.src='hero3.mp4';
+const video4=document.createElement('video'); video4.muted=true; video4.playsInline=true; video4.preload='auto'; video4.src='hero4.mp4';
+const video5=document.createElement('video'); video5.muted=true; video5.playsInline=true; video5.preload='auto'; video5.src='hero5.mp4';
+[video3,video4,video5].forEach(v=>{ v.addEventListener('ended',()=>{ dirty=true; }); v.addEventListener('seeked',()=>{ dirty=true; }); });
+let actVid=video;                                              // which video the canvas currently draws
+
+/* ---------- canvas / video ---------- */
+function sizeCanvas(){
+  const w=window.innerWidth, h=window.innerHeight, cw=Math.min(w, CANVAS_CAP);
+  canvas.width=Math.round(cw); canvas.height=Math.round(cw*h/w); dirty=true;
+}
+sizeCanvas();
+window.addEventListener('resize',()=>{ sizeCanvas(); sizeFx(); });
+function draw(){
+  const v=actVid, vw=v.videoWidth, vh=v.videoHeight; if(!vw||!vh) return;
+  const cw=canvas.width, ch=canvas.height, scale=Math.max(cw/vw, ch/vh), dw=vw*scale, dh=vh*scale;
+  cx.drawImage(v, (cw-dw)/2, (ch-dh)/2, dw, dh);
+}
+video.addEventListener('loadedmetadata',()=>{ duration=video.duration||0; sizeCanvas(); });
+video.addEventListener('seeked',()=>{ dirty=true; });
+video.addEventListener('timeupdate',()=>{
+  if(looping && video.currentTime>=loopB-0.03){ try{ video.currentTime=loopA; }catch(e){} }
+  else if(!looping && playStopAt && video.currentTime>=playStopAt-0.04){ try{ video.pause(); }catch(e){} playStopAt=0; dirty=true; }
+});
+function begin(){ if(ready) return; ready=true; loader.classList.add('gone'); try{ video.currentTime=0; }catch(e){} dirty=true; }
+video.addEventListener('canplay', begin);
+video.addEventListener('loadeddata', begin);
+setTimeout(begin, 4500);
+
+function stageOn(){ stageVisible=true; document.body.classList.remove('bg-off'); dirty=true; }
+function stageOff(){ stageVisible=false; document.body.classList.add('bg-off'); looping=false; playStopAt=0; [video,video3,video4,video5].forEach(v=>{ try{ v.pause(); }catch(e){} }); }
+function setLoop(a,b){ loopA=a; loopB=b; looping=true; playStopAt=0; video.playbackRate=1;
+  if(video.currentTime<a-0.1 || video.currentTime>b){ try{ video.currentTime=a; }catch(e){} }
+  video.play().catch(()=>{}); dirty=true; }
+function playOnce(a,b){ looping=false; video.playbackRate=1;        // plays once, then freezes at b
+  try{ if(video.currentTime<a-0.1 || video.currentTime>b) video.currentTime=a; }catch(e){}
+  playStopAt=b; video.play().catch(()=>{}); dirty=true; }
+async function rushToEnd(tk){          // accelerate hero1 to its last frame before leaving slide 1
+  looping=false; playStopAt=0; video.playbackRate=3.5; video.play().catch(()=>{});
+  let g=0; while(video.currentTime<HERO_B-0.06 && g++<240){ if(tk.cancelled) return; dirty=true; await sleep(25); }
+  try{ video.pause(); }catch(e){} video.playbackRate=1; dirty=true;
+}
+
+/* ---------- procedural molecules (subtle drifting particles + links) ---------- */
+let parts=[];
+function sizeFx(){ fx.width=Math.round(window.innerWidth*0.5); fx.height=Math.round(window.innerHeight*0.5); initParts(); }
+function initParts(){
+  const cols=['131,103,223','131,103,223','170,150,255','255,140,60'];
+  const n=window.innerWidth<760?20:30;
+  parts=[]; for(let i=0;i<n;i++){ parts.push({
+    x:Math.random()*fx.width, y:Math.random()*fx.height,
+    vx:(Math.random()*2-1)*0.18, vy:(Math.random()*2-1)*0.18,
+    r:6+Math.random()*10, c:cols[i%cols.length] });
+  }
+}
+sizeFx();
+function stepFx(){
+  const w=fx.width, h=fx.height; fcx.clearRect(0,0,w,h);
+  for(const p of parts){ p.x+=p.vx; p.y+=p.vy; if(p.x<-20)p.x=w+20; if(p.x>w+20)p.x=-20; if(p.y<-20)p.y=h+20; if(p.y>h+20)p.y=-20; }
+  const LINK=w*0.16;
+  fcx.lineWidth=1;
+  for(let i=0;i<parts.length;i++){ for(let j=i+1;j<parts.length;j++){
+    const a=parts[i], b=parts[j], dx=a.x-b.x, dy=a.y-b.y, d=Math.hypot(dx,dy);
+    if(d<LINK){ fcx.globalAlpha=(1-d/LINK)*0.14; fcx.strokeStyle='rgba('+a.c+',1)';
+      fcx.beginPath(); fcx.moveTo(a.x,a.y); fcx.lineTo(b.x,b.y); fcx.stroke(); }
+  }}
+  for(const p of parts){
+    const g=fcx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+    g.addColorStop(0,'rgba('+p.c+',.55)'); g.addColorStop(1,'rgba('+p.c+',0)');
+    fcx.globalAlpha=1; fcx.fillStyle=g; fcx.beginPath(); fcx.arc(p.x,p.y,p.r,0,6.283); fcx.fill();
+  }
+  fcx.globalAlpha=1;
+}
+
+/* ---------- procedural camera (slide 2) — smooth lerp, follows like a magnifier ---------- */
+let camX=0, camS=1, camTX=0, camTS=1, camActive=false;
+const CAM_LERP=0.055;
+function camTo(x,s){ camTX=x; camTS=s; }
+function camReset(){ camActive=false; camX=0; camS=1; camTX=0; camTS=1; cam2.style.transform='translateX(0) scale(1)'; cam2.style.filter='none'; }
+
+/* ---------- master rAF: video draw + camera + particles ---------- */
+function master(){
+  if(stageVisible && actVid.readyState>=2 && (!actVid.paused || dirty)){ draw(); dirty=false; }
+  if(camActive){ camX+=(camTX-camX)*CAM_LERP; camS+=(camTS-camS)*CAM_LERP;
+    cam2.style.transform='translateX('+camX.toFixed(3)+'%) scale('+camS.toFixed(4)+')'; }
+  if(started) stepFx();
+  requestAnimationFrame(master);
+}
+requestAnimationFrame(master);
+
+/* ---------- typing sound (synthesized) ---------- */
+let actx=null, soundOn=true, lastClick=0;
+function ensureAudio(){ if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(actx && actx.state==='suspended') actx.resume(); }
+function typeClick(){
+  if(!soundOn || !actx || actx.state!=='running') return;
+  const now=performance.now(); if(now-lastClick<26) return; lastClick=now;
+  const a=actx, t=a.currentTime, dur=0.035, buf=a.createBuffer(1, Math.ceil(a.sampleRate*dur), a.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++){ d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.4); }
+  const src=a.createBufferSource(); src.buffer=buf;
+  const bp=a.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1500+Math.random()*700; bp.Q.value=0.9;
+  const g=a.createGain(); g.gain.setValueAtTime(0.16,t); g.gain.exponentialRampToValueAtTime(0.0006,t+dur);
+  src.connect(bp); bp.connect(g); g.connect(a.destination); src.start(t); src.stop(t+dur);
+}
+
+/* ---------- typewriter ---------- */
+function splitChars(root){
+  const chars=[];
+  (function walk(node, inGrad){
+    Array.from(node.childNodes).forEach(n=>{
+      if(n.nodeType===3){
+        const frag=document.createDocumentFragment();
+        n.textContent.split(/(\s+)/).forEach(part=>{
+          if(part==='') return;
+          if(/^\s+$/.test(part)){ frag.appendChild(document.createTextNode(' ')); return; }
+          if(inGrad){ for(const c of part){ const s=document.createElement('span'); s.className='ch gch'; s.textContent=c; frag.appendChild(s); chars.push(s); } }
+          else { const w=document.createElement('span'); w.className='word';
+            for(const c of part){ const s=document.createElement('span'); s.className='ch'; s.textContent=c; w.appendChild(s); chars.push(s); }
+            frag.appendChild(w); }
+        });
+        n.replaceWith(frag);
+      } else if(n.nodeType===1 && n.tagName!=='BR'){ walk(n, inGrad || n.classList.contains('grad')); }
+    });
+  })(root, !!(root.classList && root.classList.contains('grad')));
+  return chars;
+}
+document.querySelectorAll('.type').forEach(el=>{ el.__chars=splitChars(el); });
+
+async function typeEl(el, tk){
+  const chars=el.__chars||[];
+  for(let i=0;i<chars.length;i++){
+    if(tk.cancelled) throw 'cancel';
+    chars[i].classList.add('on');
+    if(chars[i].textContent.trim()!==''){ typeClick(); await sleep(TYPE_MS); }
+  }
+}
+function typesIn(container){ return [...container.querySelectorAll('.type')]; }
+async function typeSeq(container, tk){ for(const el of typesIn(container)){ await typeEl(el, tk); } }
+
+const ERASE_MS=22;                               // apagar é mais rápido que digitar
+async function eraseEl(el, tk){                  // backspace letra por letra (do fim pro começo)
+  const chars=el.__chars||[];
+  for(let i=chars.length-1;i>=0;i--){
+    if(tk.cancelled) throw 'cancel';
+    if(chars[i].classList.contains('on')){
+      chars[i].classList.remove('on');
+      if(chars[i].textContent.trim()!==''){ typeClick(); await sleep(ERASE_MS); }
+    }
+  }
+}
+
+async function gap(ms, tk){ await sleep(ms); if(tk.cancelled) throw 'cancel'; }
+
+/* ---------- slide reset + cinematic dissolve ---------- */
+function resetSlide(i){
+  const sl=slideEls[i];
+  sl.querySelectorAll('.ch').forEach(c=>c.classList.remove('on'));
+  sl.querySelectorAll('.layer').forEach(L=>L.classList.remove('on','out'));
+  sl.querySelectorAll('.recap').forEach(r=>r.classList.remove('on','out'));
+  sl.querySelectorAll('.sline').forEach(s=>s.classList.remove('on'));
+  sl.querySelectorAll('.rise2').forEach(r=>r.classList.remove('in'));
+  const cam=sl.querySelector('.cam'); if(cam){ cam.classList.remove('swoosh'); cam.style.removeProperty('--ox'); cam.style.transform=''; cam.style.filter=''; }
+  if(i===1) camReset();
+  if(i===4) hideFinale();
+}
+async function dissolveSlide(i, dir, tk){               // whole content sweeps to the side (vulto) + fades
+  const sl=slideEls[i];
+  const ox=(dir>=0?-13:13)+'%';
+  const cam=sl.querySelector('.cam');
+  if(cam){ if(i===1) camActive=false; cam.style.setProperty('--ox',ox); cam.classList.add('swoosh'); }
+  sl.querySelectorAll('.layer.on, .recap.on').forEach(L=>L.classList.add('out'));   // camada/recap sai em fade out
+  await gap(820, tk);
+}
+
+/* ============ per-section choreography ============ */
+async function enter0(tk){                          // HERO — hero1 loops, text types
+  await typeSeq(slideEls[0], tk);
+}
+async function enter1(tk){                           // SOBRE — frase por frase: digita → apaga → próxima
+  const eyebrow=document.getElementById('sobreEyebrow');
+  const lines=[...slideEls[1].querySelectorAll('.sline')];
+  const poses=[[0,1.08],[5,1.14],[-5,1.12],[4,1.15],[0,1.06]];   // ângulo de câmera diferente por frase
+  camReset(); camActive=true; camTo(0,1.06);
+  await typeEl(eyebrow, tk);                          // eyebrow digita e permanece
+  for(let i=0;i<lines.length;i++){
+    const p=poses[i%poses.length]; camTo(p[0],p[1]);  // novo ângulo (lupa suave acompanha)
+    lines[i].classList.add('on');
+    await typeEl(lines[i], tk);                        // digita a frase
+    await gap(1700, tk);                               // segura pra ler
+    if(i<lines.length-1){ await eraseEl(lines[i], tk); lines[i].classList.remove('on'); await gap(220, tk); }   // apaga e parte pra próxima
+  }
+}
+async function enter2(tk){                            // POR QUE EXISTE — camadas: digita 2-4 frases, fade out, próxima
+  const layers=[...slideEls[2].querySelectorAll('.layer')];
+  const holds=[1900, 2000, 2300, 2400];                // pausa pra ler cada camada
+  for(let i=0;i<layers.length;i++){
+    const L=layers[i];
+    L.classList.add('on');                             // camada visível; as letras entram uma a uma
+    const lines=[...L.querySelectorAll('.type')];
+    for(let k=0;k<lines.length;k++){ await typeEl(lines[k], tk); if(k<lines.length-1) await gap(280, tk); }
+    await gap(holds[i]||2000, tk);                     // segura pra quem assiste acompanhar
+    L.classList.add('out'); await gap(1000, tk);       // fade out da camada inteira
+    L.classList.remove('on','out');
+    await gap(280, tk);
+  }
+  // recap final: reúne tudo que apareceu, organizado em colunas (estilo seção de landpage)
+  const recap=slideEls[2].querySelector('.recap');
+  recap.classList.add('on');
+  await gap(5200, tk);                                 // tempo pra ler/gravar a coluna
+  next();                                              // ao passar, o dissolveSlide faz o recap sair em fade out
+}
+async function enter3(tk){                            // CALENDÁRIO — molde (hero4) desenha primeiro, depois o texto digita
+  await gap(3800, tk);                                  // deixa as linhas + mãos se desenharem
+  await typeSeq(slideEls[3], tk);                       // título + as 5 datas em ordem
+  await gap(2000, tk); next();                          // 2s depois → seção 5 (automático)
+}
+async function enter4(tk){                            // RODAPÉ — tudo entra um a um + finale (mouse clica → busca digita)
+  document.body.classList.add('foot-live');
+  hideFinale();
+  for(const el of slideEls[4].querySelectorAll('.rise2')){ if(tk.cancelled) throw 'cancel'; el.classList.add('in'); await gap(240, tk); }
+  await gap(900, tk);
+  await mouseClickButton(tk);                          // o mouse desliza de cima e clica no botão laranja
+  // some com TODO o resto (rodapé, mouse, cabeçalho/HUD) — fica só a barra de busca
+  const cam=slideEls[4].querySelector('.cam'); if(cam) cam.style.opacity='0';
+  const cur=document.getElementById('mouseCur'); if(cur) cur.style.opacity='0';
+  document.body.classList.add('finale');
+  await gap(850, tk);
+  await typeSearchURL(tk);                             // a barra de busca digita o link, letra por letra
+}
+function hideFinale(){
+  const c=document.getElementById('mouseCur'); if(c){ c.style.opacity='0'; c.classList.remove('click'); (c.getAnimations?.()||[]).forEach(a=>a.cancel()); }
+  const f=document.getElementById('finalSearch'); if(f) f.classList.remove('show');
+  const t=document.getElementById('fsText'); if(t) t.textContent='';
+  const cam=slideEls[4] && slideEls[4].querySelector('.cam'); if(cam) cam.style.opacity='';   // restaura o rodapé
+  document.body.classList.remove('finale');
+}
+async function mouseClickButton(tk){
+  const cur=document.getElementById('mouseCur');
+  const btn=slideEls[4].querySelector('.btn-primary');
+  if(!cur || !btn) return;
+  const b=btn.getBoundingClientRect();
+  const tx=b.left+b.width*0.5, ty=b.top+b.height*0.5;
+  const sx=window.innerWidth*0.5+40, sy=-50;           // entra deslizando de cima
+  cur.style.left='0px'; cur.style.top='0px'; cur.style.opacity='1';
+  let mv=null;
+  try{ mv=cur.animate([{transform:'translate('+sx+'px,'+sy+'px)'},{transform:'translate('+tx+'px,'+ty+'px)'}],
+    {duration:1500, easing:'cubic-bezier(.5,0,.2,1)', fill:'forwards'}); }catch(e){ cur.style.transform='translate('+tx+'px,'+ty+'px)'; }
+  if(mv){ try{ await mv.finished; }catch(e){} }
+  if(tk.cancelled) return;
+  cur.classList.add('click'); btn.classList.add('btn-press');   // clique
+  await gap(220, tk);
+  cur.classList.remove('click'); btn.classList.remove('btn-press');
+}
+async function typeSearchURL(tk){
+  const box=document.getElementById('finalSearch'), txt=document.getElementById('fsText');
+  if(!box || !txt) return;
+  box.classList.add('show'); txt.textContent='';
+  await gap(560, tk);
+  const url='https://www.premioslusofonossaude.com/';
+  for(const ch of url){ if(tk.cancelled) return; txt.textContent+=ch; typeClick(); await sleep(72+Math.random()*55); }
+}
+const ENTER=[enter0,enter1,enter2,enter3,enter4];
+
+function applyBg(to){
+  document.body.classList.remove('foot-live');
+  if(to===0){ actVid=video; stageOn(); setLoop(HERO_A,HERO_B); }            // hero1 loops
+  else if(to===1){ actVid=video; stageOn(); playOnce(SOBRE_A,SOBRE_B); }    // hero2 toca 1× e congela
+  else if(to===2){ actVid=video3; stageOn(); try{ video.pause(); }catch(e){} try{ video4.pause(); }catch(e){}  // hero3 = tinta/conexão
+    video3.playbackRate=1; try{ video3.currentTime=0; }catch(e){} video3.play().catch(()=>{}); dirty=true; }
+  else if(to===3){ actVid=video4; stageOn(); try{ video.pause(); }catch(e){} try{ video3.pause(); }catch(e){}  // hero4 = molde do calendário (desenha) + mãos
+    video4.playbackRate=1; try{ video4.currentTime=0; }catch(e){} video4.play().catch(()=>{}); dirty=true; }
+  else if(to===4){ actVid=video5; stageOn(); [video,video3,video4].forEach(v=>{ try{ v.pause(); }catch(e){} });  // hero5 = mãos se afastam e viram teia de linhas+nós
+    video5.playbackRate=1; try{ video5.currentTime=0; }catch(e){} video5.play().catch(()=>{}); dirty=true; }
+  else { stageOff(); }
+}
+
+async function transition(from, to, tk){
+  const dir = (from<0 || to>from) ? 1 : -1;
+  if(from>=0){
+    if(from===0) await rushToEnd(tk);                   // hero chega no último frame antes de sair
+    await dissolveSlide(from, dir, tk);                 // conteúdo sai em vulto pro lado
+    slideEls[from].classList.remove('active'); resetSlide(from);
+  }
+  if(tk.cancelled) throw 'cancel';
+  resetSlide(to); applyBg(to);
+  slideEls[to].classList.add('active');
+  await gap(60, tk);
+}
+
+function nav(to){
+  if(to<0 || to>=SLIDES || to===current) return;
+  token.cancelled=true;
+  const tk={cancelled:false}; token=tk;
+  const from=current; current=to;
+  progressBar.style.width=((to+1)/SLIDES*100)+'%';
+  setNavInd(to);                                       // indicador laranja desliza pra aba da seção
+  (async()=>{ try{ await transition(from, to, tk); if(tk.cancelled) return; await ENTER[to](tk); }catch(e){ if(e!=='cancel') console.error(e); } })();
+}
+function next(){ if(current<SLIDES-1) nav(current+1); }
+
+/* sliding orange tab indicator in the header — follows the current section's tab */
+const navLinks=document.querySelector('.nav-links');
+const navInd=document.getElementById('navInd');
+function setNavInd(section){
+  const a=navLinks.querySelector('[data-go="'+section+'"]');
+  navLinks.querySelectorAll('a').forEach(x=>x.classList.toggle('active', x===a));
+  if(!a){ navInd.style.opacity='0'; return; }                 // hero (sem aba) → some
+  const ulR=navLinks.getBoundingClientRect(), aR=a.getBoundingClientRect();
+  const pad=13, left=(aR.left-ulR.left-pad), width=(aR.width+pad*2);
+  if(navInd.style.opacity==='' || navInd.style.opacity==='0'){  // 1ª aparição: posiciona sem deslizar
+    const t=navInd.style.transition; navInd.style.transition='none';
+    navInd.style.left=left+'px'; navInd.style.width=width+'px'; navInd.offsetHeight; navInd.style.transition=t;
+    navInd.style.opacity='1';
+  } else { navInd.style.left=left+'px'; navInd.style.width=width+'px'; navInd.style.opacity='1'; }
+}
+addEventListener('resize',()=>{ if(navInd.style.opacity==='1') setNavInd(current); });
+
+/* ============ start ============ */
+/* the intro symbol flies (FLIP) to BESIDE the hero title, while the header reveals one by one */
+function revealHeader(){
+  const items=[ document.querySelector('.nav .logo-img'),
+    document.querySelector('.nav-logo .logo-txt'),
+    ...document.querySelectorAll('.nav-links li'),
+    document.querySelector('.nav-cta') ];
+  items.forEach((el,i)=>{ if(el) setTimeout(()=>el.classList.add('in'), 520+i*300); });   // slower, clearly staggered
+}
+async function startSequence(){
+  if(started) return; started=true; ensureAudio();
+  const flyer=document.getElementById('introLogo');
+  const target=document.querySelector('#s1 .hero-logo');
+  /* PHASE 1 — a logo desliza SUAVE do centro pro lado esquerdo (sobre o fundo escuro da intro) */
+  if(flyer && target){
+    const a=flyer.getBoundingClientRect(), b=target.getBoundingClientRect();   // b: spot beside the title (laid out though hidden)
+    const s=b.height/a.height, dx=(b.left+b.width/2)-(a.left+a.width/2), dy=(b.top+b.height/2)-(a.top+a.height/2);
+    document.body.appendChild(flyer);                   // free it from the intro so it doesn't fade
+    flyer.style.cssText='position:fixed; margin:0; left:'+a.left+'px; top:'+a.top+'px; width:'+a.width+'px; height:auto; z-index:70; opacity:1;';
+    let move=null;
+    try{
+      move=flyer.animate(
+        [ { transform:'translate(0px,0px) scale(1)' },
+          { transform:'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px) scale('+s.toFixed(4)+')' } ],
+        { duration:1700, easing:'cubic-bezier(.16,1,.3,1)', fill:'forwards' });   // WAAPI = sempre anima
+    }catch(e){}
+    if(move){ try{ await move.finished; }catch(e){} }
+    else { flyer.style.transition='transform 1.7s var(--ease-out)';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{ flyer.style.transform='translate('+dx+'px,'+dy+'px) scale('+s+')'; }));
+      await sleep(1700); }
+  }
+  /* PHASE 2 — só DEPOIS do movimento: o mundo surge em fade (vídeo, slide, cabeçalho, texto) */
+  document.body.classList.add('started');               // intro fade-out + vídeo + moléculas fade-in (suave)
+  stageOn(); setLoop(HERO_A,HERO_B);
+  current=0; progressBar.style.width=(1/SLIDES*100)+'%';
+  resetSlide(0); slideEls[0].classList.add('active');   // hero slide fades in (.9s)
+  await sleep(1000);                                    // deixa o vídeo + slide surgirem
+  if(target) target.classList.add('lit');              // hero logo assume o lugar (mesmo ponto/tamanho do flyer)
+  if(flyer) flyer.style.display='none';                // troca sem corte
+  revealHeader();                                      // cabeçalho surge um a um, suave
+  await sleep(750);
+  const tk={cancelled:false}; token=tk;
+  try{ await enter0(tk); }catch(e){ if(e!=='cancel') console.error(e); }   // por fim, o título digita
+}
+
+document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{ e.preventDefault(); if(started) nav(+a.dataset.go); }));
+
+/* scroll = transition shortcut between slides */
+let wheelLock=0;
+addEventListener('wheel',(e)=>{
+  if(!started) return; const now=Date.now(); if(now<wheelLock || Math.abs(e.deltaY)<18) return;
+  wheelLock=now+1100; if(e.deltaY>0) next(); else if(current>0) nav(current-1);
+},{passive:true});
+
+addEventListener('keydown',(e)=>{
+  if(!started){ if(e.code==='Space' || e.key==='ArrowRight'){ e.preventDefault(); startSequence(); } return; }
+  if(e.key==='ArrowRight' || e.code==='Space'){ e.preventDefault(); next(); }
+  else if(e.key==='ArrowLeft'){ e.preventDefault(); if(current>0) nav(current-1); }
+  else if(e.key.toLowerCase()==='h') document.body.classList.toggle('hud-hidden');
+  else if(e.key.toLowerCase()==='m'){ soundOn=!soundOn; sndState.textContent=soundOn?'ON':'OFF'; }
+  else if(e.key==='Home') location.reload();
+});
+['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev, ensureAudio, {passive:true}));
+</script>
 </body>
 </html>

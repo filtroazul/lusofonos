@@ -2,6 +2,15 @@
 hero.mp4
 hero1-lightbg-backup.mp4
 
+# vídeos de referência (da esposa) e brutos — não vão pro site
+referencia.mp4
+referencia2.mp4
+video1.mp4
+
+# imagens soltas / exports não usados pelo site
+[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-*.png
+Design sem nome.png
+
 # temporários
 _*.png
 .DS_Store
