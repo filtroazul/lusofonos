@@ -44,7 +44,7 @@ body.entered .intro{ opacity:0; pointer-events:none; }
   transition:background .5s var(--ease), border-color .5s var(--ease), padding .5s var(--ease); }
 .nav.solid{ background:rgba(8,5,16,.72); border-bottom-color:rgba(255,255,255,.06); padding-top:11px; padding-bottom:11px; }
 .brand{ display:flex; align-items:center; gap:11px; }
-.brand img{ height:36px; width:auto; opacity:0; filter:drop-shadow(0 0 10px rgba(131,103,223,.5)); }
+.brand img{ height:50px; width:auto; opacity:0; filter:drop-shadow(0 0 10px rgba(131,103,223,.5)); }
 .brand img.lit{ opacity:1; }
 .brand-txt{ font-size:11px; line-height:1.25; letter-spacing:.05em; text-transform:uppercase; font-weight:600; color:var(--ink); }
 .brand-txt em{ color:var(--ink-dim); font-style:normal; font-weight:400; }
@@ -74,6 +74,14 @@ body.entered #bg{ opacity:.5; }
   background:radial-gradient(50% 46% at 50% 48%, rgba(7,5,16,.78), rgba(7,5,16,.28) 64%, rgba(7,5,16,.52) 100%); }
 .tinta{ position:absolute; top:89%; width:min(35vw,500px); transform:translateY(-50%); will-change:transform; opacity:0; z-index:2; }
 .tinta.l{ left:7%; } .tinta.r{ right:7%; }
+/* título-arte (arte1) no lugar do h1+sub + manchas (arte2/arte3) entrando dos lados */
+.hero-art{ width:min(62vw,540px); height:auto; display:block; margin:0 auto; filter:drop-shadow(0 8px 34px rgba(0,0,0,.55));
+  -webkit-mask:linear-gradient(to bottom, #000 0%, #000 var(--rev,0%), transparent calc(var(--rev,0%) + 7%));
+  mask:linear-gradient(to bottom, #000 0%, #000 var(--rev,0%), transparent calc(var(--rev,0%) + 7%)); }   /* pichação: revela de cima→baixo via scroll (--rev) */
+.mancha{ position:absolute; z-index:2; pointer-events:none; opacity:0; will-change:transform, opacity; filter:drop-shadow(0 0 26px rgba(131,103,223,.22)); }
+.mancha-a{ left:1%; top:15%; width:min(25vw,300px); }    /* sup-esq, perto do título */
+.mancha-b{ right:1%; top:56%; width:min(23vw,280px); }   /* inf-dir */
+@media(max-width:760px){ .mancha-a{ width:44vw; } .mancha-b{ width:42vw; } }
 .hero-copy{ position:relative; z-index:3; text-align:center; max-width:940px; }
 .eyebrow{ font-size:12.5px; letter-spacing:.3em; text-transform:uppercase; color:#FF8A2E; font-weight:600; margin-bottom:24px;
   text-shadow:0 0 10px rgba(255,150,50,.8), 0 0 26px rgba(255,115,0,.4); }
@@ -201,13 +209,14 @@ body.entered #bg{ opacity:.5; }
     <video id="bgv" src="hero-rede-scrub.mp4" muted playsinline preload="auto" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></video>
     <div class="hero-veil"></div>
 
+    <img class="mancha mancha-a" src="arte3.png" alt="" />
+    <img class="mancha mancha-b" src="arte2.png" alt="" />
+
     <img class="tinta l" src="tinta1.png" alt="" />
     <img class="tinta r" src="tinta2.png" alt="" />
 
     <div class="hero-copy">
-      <p class="eyebrow up">Prémios Lusófonos da Criatividade em Saúde · 2026</p>
-      <h1 class="display up">Entre pessoas.</h1>
-      <p class="sub up">A saúde acontece <b>entre pessoas.</b></p>
+      <img class="hero-art" src="arte1.png" alt="Entre pessoas — é onde a saúde acontece" onerror="this.style.display='none'" />
       <div class="cta-row up">
         <a href="#" class="btn btn-primary">Inscrever projeto</a>
         <a data-go="1" class="btn btn-ghost">Conhecer a categoria</a>
@@ -285,6 +294,7 @@ const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)), lerp=(a,b,t)=>a+(b-a)*t;
 const nav=$('#nav'), intro=$('#intro'), hero=$('#hero'), pin=$('.hero-pin');
 const bg=$('#bg'), ctx=bg.getContext('2d'), bgv=$('#bgv');
 const tL=$('.tinta.l'), tR=$('.tinta.r'), scrollHint=$('#scrollHint');
+const arteA=$('.mancha-a'), arteB=$('.mancha-b'), heroArt=$('.hero-art');
 const SVGNS='http://www.w3.org/2000/svg';
 
 /* ---------- background scrub (canvas) ---------- */
@@ -312,6 +322,14 @@ function handsEnter(){
     tR.style.transform='translateY(-50%) translateX(13vw)'; tR.style.opacity='.42'; aR.cancel();
     handsReady=true;
   });
+}
+/* manchas (arte2/arte3): entram deslizando dos lados conforme a rolagem do hero */
+function updateArt(p){
+  const e=ease3(clamp(p/0.55,0,1));
+  arteA.style.opacity=(e*0.9).toFixed(3); arteA.style.transform='translateX('+lerp(-55,0,e).toFixed(1)+'vw) rotate(-24deg)';   // arte3: anti-horário (moldura na ponta esq)
+  arteB.style.opacity=(e*0.9).toFixed(3); arteB.style.transform='translateX('+lerp(55,0,e).toFixed(1)+'vw) rotate(22deg)';    // arte2: horário
+  // pichação: título revela de cima→baixo conforme rola (--rev 0→100%)
+  if(heroArt){ const rev=ease3(clamp(p/0.42,0,1))*100; heroArt.style.setProperty('--rev', rev.toFixed(1)+'%'); }
 }
 function updateHands(p){
   if(!handsReady) return;
@@ -558,6 +576,7 @@ function raf(t){
     if(dur>0 && Math.abs(tgt-cur)>0.02 && t-lastSeek>45){ try{ bgv.currentTime=cur; }catch(e){} lastSeek=t; }  // seek throttled por tempo
     draw();   // desenha TODO frame (não depende do evento 'seeked', que falha no navegador do usuário)
     updateHands(p);
+    updateArt(p);
     if(scrollHint) scrollHint.style.opacity = (entered && p<0.06)? '1':'0';
     // dots
     setDot(p<0.92?0:1);
