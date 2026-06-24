@@ -451,18 +451,15 @@ function drawRibbons(t, reach, splitPx){ splitPx=splitPx||0; const W=ribCv.width
     rbx.save(); rbx.translate( splitPx,0); drawSeg(W, W-half, yb, amp, ph); rbx.restore(); }   // metade dir desliza pra DIREITA
   rbx.shadowBlur=0;
 }
-/* ===== pílulas: jornada contínua (cantos seç.3 → REDEMOINHO no centro → cantos OPOSTOS seç.4) ===== */
-function journeyPill(el, A, B, e, phase, inward, t){
-  const baseX=lerp(A.x,B.x,e), baseY=lerp(A.y,B.y,e);
-  const turns=2.0, ang=phase + e*Math.PI*2*turns;          // gira conforme o scroll = redemoinho suave
-  const spin=Math.sin(clamp(e,0,1)*Math.PI);               // 0 nas pontas, 1 no meio (raio máximo no meio)
-  const rad=spin*Math.min(innerWidth,innerHeight)*0.17;
-  const idle=(e>0.96)? Math.sin(t*0.0006+phase)*6 : 0;     // balanço suave ao pousar
-  const x=baseX+Math.cos(ang)*rad, y=baseY+Math.sin(ang)*rad+idle;
-  const sc=(inward? lerp(1,0.5,e) : lerp(0.5,1,e))*(1+0.2*spin);
-  const rot=ang*57.2958*0.5 + idle*0.4;
+/* ===== pílulas: saída ROLANDO pra fora (seç.3) → voltam ROLANDO dos lados (seç.4), suave/sem exagero ===== */
+function rollPill(el, A, B, e, entering, t){
+  const x=lerp(A.x,B.x,e), y=lerp(A.y,B.y,e);
+  const dir=(B.x>=A.x)?1:-1, ROLL=150;                       // giro de "rolagem" suave
+  const rot = entering ? dir*ROLL*(e-1) : dir*ROLL*e;        // gira batendo c/ a direção; ao CHEGAR assenta reto (rot→0)
+  const idle = entering ? Math.sin(t*0.0006)*4*e : 0;        // balancinho sutil só depois de assentar
+  const sc = entering ? lerp(0.92,1,e) : 1;
   el.style.right='auto'; el.style.bottom='auto';
-  el.style.left=x.toFixed(1)+'px'; el.style.top=y.toFixed(1)+'px';
+  el.style.left=x.toFixed(1)+'px'; el.style.top=(y+idle).toFixed(1)+'px';
   el.style.transform='translate(-50%,-50%) scale('+sc.toFixed(3)+') rotate('+rot.toFixed(1)+'deg)';
   el.style.opacity='0.68';
 }
@@ -471,17 +468,17 @@ function updatePills(t){
   const pc=clamp(p3/P3_CONTENT,0,1), pe=clamp((p3-P3_CONTENT)/(1-P3_CONTENT),0,1);
   const W=innerWidth, H=innerHeight;
   const aw=pillA.offsetWidth||120, ah=pillA.offsetHeight||120, bw=pillB.offsetWidth||120, bh=pillB.offsetHeight||120;
-  const M={x:W*0.5, y:H*0.62};                                                          // ponto do redemoinho (entre as duas)
   const homeA={x:W*0.94-aw/2, y:H*0.12+ah/2}, homeB={x:W*0.06+bw/2, y:H*0.88-bh/2};     // cantos da seç.3
   const destA={x:W*0.085+aw/2, y:H*0.17+ah/2}, destB={x:W*0.915-bw/2, y:H*0.83-bh/2};   // seç.4: SUP-ESQ / INF-DIR
-  if(p4>0.0005){                                  // seç.4: do redemoinho → pousam nos cantos opostos
-    const arr=ease3(clamp(p4/0.18,0,1));
-    journeyPill(pillA, M, destA, arr, 0,       false, t);
-    journeyPill(pillB, M, destB, arr, Math.PI, false, t);
-  } else if(pe>0.0005){                           // saída seç.3: dos cantos → redemoinho convergindo em M
+  const offR=W+Math.max(aw,bw)*0.9, offL=-Math.max(aw,bw)*0.9;   // pontos fora da tela
+  if(p4>0.0005){                                  // SEÇÃO 4: voltam rolando dos lados pras posições (A da ESQ, B da DIR)
+    const arr=ease3(clamp(p4/0.22,0,1));
+    rollPill(pillA, {x:offL,y:destA.y}, destA, arr, true, t);
+    rollPill(pillB, {x:offR,y:destB.y}, destB, arr, true, t);
+  } else if(pe>0.0005){                           // SAÍDA SEÇÃO 3: rolam suavemente pra FORA (A pra DIR, B pra ESQ)
     const e=ease3(pe);
-    journeyPill(pillA, homeA, M, e, 0,       true, t);
-    journeyPill(pillB, homeB, M, e, Math.PI, true, t);
+    rollPill(pillA, homeA, {x:offR,y:homeA.y}, e, false, t);
+    rollPill(pillB, homeB, {x:offL,y:homeB.y}, e, false, t);
   } else {                                        // conteúdo seç.3: cantos (CSS) + balanço suave
     pillA.style.left=''; pillA.style.top=''; pillA.style.right=''; pillA.style.bottom='';
     pillB.style.left=''; pillB.style.top=''; pillB.style.right=''; pillB.style.bottom='';
@@ -517,10 +514,10 @@ function drawCalNodes(np){ if(np<=0||!calGeo) return; const {vxs,hys}=calGeo; co
 function updateCal(t){ const p4=calProgress(), W=innerWidth, H=innerHeight;
   if(calGrid.width!==W||calGrid.height!==H){ calGrid.width=W; calGrid.height=H; }
   cgx.clearRect(0,0,W,H); computeCalGeo();
-  drawCalGrid(ease3(clamp((p4-0.15)/0.3,0,1)));    // linhas crescem das bordas
-  drawCalNodes(clamp((p4-0.4)/0.16,0,1));          // nós surgem ao colidir
-  calHead.classList.toggle('in', p4>0.1);
-  calRows.forEach((r,i)=>r.classList.toggle('in', p4 > 0.52 + i*0.055)); }
+  drawCalGrid(ease3(clamp((p4-0.28)/0.3,0,1)));    // linhas crescem DEPOIS das pílulas voltarem (~p4 0.22)
+  drawCalNodes(clamp((p4-0.54)/0.16,0,1));         // nós surgem ao colidir
+  calHead.classList.toggle('in', p4>0.26);
+  calRows.forEach((r,i)=>r.classList.toggle('in', p4 > 0.62 + i*0.05)); }
 function updatePorque(t){
   const p3=porqueProgress();
   const pc=clamp(p3/P3_CONTENT,0,1);                          // progresso do CONTEÚDO (0→1 dentro de 0→0.78)
