@@ -97,21 +97,31 @@ body.entered #bg{ opacity:.5; }
 #categoria{ position:relative; height:340vh; }
 .tw{ will-change:transform, opacity; }
 /* ===== SEÇÃO 3 — Por que existe (esfera lilás se dissolve) ===== */
-#porque{ position:relative; height:580vh; }
+#porque{ position:relative; height:760vh; }   /* conteúdo 0→0.78 + saída 0.78→1 */
 .por-pin{ position:sticky; top:0; height:100vh; overflow:hidden; display:flex; align-items:center; justify-content:center; }
 #ribbons{ position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:screen; opacity:0; }
-.por-title-svg{ position:absolute; z-index:3; top:50%; left:50%; transform:translate(-50%,-50%); width:min(92vw,1040px); height:auto; overflow:visible; will-change:transform; }
-.por-cols{ position:absolute; z-index:3; top:55%; left:50%; transform:translateX(-50%); width:min(92vw,1040px);
-  display:grid; grid-template-columns:repeat(3,1fr); gap:26px clamp(24px,4vw,56px); }
-.por-col{ opacity:0; transform:translateY(30px); filter:blur(6px); transition:opacity 1s var(--ease-out), transform 1.1s var(--ease-out), filter 1s ease; }
-.por-col.in{ opacity:1; transform:none; filter:blur(0); }
-.por-col p{ font-size:clamp(.95rem,1.25vw,1.12rem); line-height:1.7; color:var(--ink-dim); text-align:left; }
+/* "preto abrindo" na saída: disco preto que cresce do centro */
+#exitVeil{ position:absolute; inset:0; z-index:1; pointer-events:none; opacity:0;
+  background:radial-gradient(circle at 50% 46%, #000 0%, #000 var(--r,0%), rgba(0,0,0,0) calc(var(--r,0%) + 30%)); }
+.por-title-svg{ position:absolute; z-index:3; top:50%; left:50%; transform:translate(-50%,-50%); transform-origin:center; width:min(92vw,1040px); height:auto; overflow:visible; will-change:transform, opacity; }
+.por-cols{ position:absolute; z-index:3; top:55%; left:50%; transform:translateX(-50%); transform-origin:center top; width:min(92vw,1040px);
+  display:grid; grid-template-columns:repeat(3,1fr); gap:26px clamp(24px,4vw,56px); will-change:transform, opacity; }
+/* cards (landpage): fundo blur, mesmo tamanho, borda neon SUTIL e fina; card forma 1º, texto surge depois */
+.por-col{ position:relative; padding:clamp(18px,2.1vw,28px) clamp(16px,1.9vw,24px); border-radius:16px;
+  background:linear-gradient(180deg, rgba(30,21,52,.58), rgba(13,8,24,.62));   /* fill translúcido — SEM backdrop-filter (bem mais leve no PC sem GPU) */
+  border:1px solid rgba(176,150,250,.30); box-shadow:0 0 18px rgba(131,103,223,.10), inset 0 0 0 1px rgba(176,150,250,.05);
+  opacity:0; transform:translateY(28px) scale(.965);
+  transition:opacity .9s var(--ease-out), transform 1s var(--ease-out); }
+.por-col.in{ opacity:1; transform:none; }
+.por-col p{ font-size:clamp(.95rem,1.25vw,1.12rem); line-height:1.7; color:var(--ink-dim); text-align:left;
+  opacity:0; transform:translateY(9px); transition:opacity .8s var(--ease-out), transform .8s var(--ease-out); }
+.por-col.tin p{ opacity:1; transform:none; }
 .por-col em{ font-style:normal; font-weight:700; color:#D9CBFF; text-shadow:0 0 16px rgba(150,120,255,.6); }
 @media(max-width:760px){ .por-cols{ grid-template-columns:1fr; gap:16px; top:50%; } }
 #porTitleTxt{ font-family:'Clash Display','Inter',sans-serif; font-weight:600; font-size:118px; letter-spacing:-2px;
   fill:rgba(224,210,255,0); stroke:rgba(206,188,255,.95); stroke-width:1.6;
   stroke-dasharray:4400; stroke-dashoffset:4400; }   /* a LINHA desenha as letras (offset via scroll), depois acende (fill) */
-.pill{ position:absolute; z-index:2; width:clamp(96px,12vw,190px); opacity:0; will-change:transform; filter:drop-shadow(0 0 14px rgba(131,103,223,.5)); }
+.pill{ position:fixed; z-index:2; width:clamp(96px,12vw,190px); opacity:0; will-change:transform; filter:drop-shadow(0 0 14px rgba(131,103,223,.5)); }
 .pill-a{ top:12%; right:6%; } .pill-b{ bottom:12%; left:6%; }
 #dissCv{ position:fixed; z-index:5; top:50%; left:50%; transform:translate(-50%,-50%); width:min(82vh,82vw); height:min(82vh,82vw);
   pointer-events:none; mix-blend-mode:screen; opacity:0; filter:contrast(1.45) brightness(1.04);   /* crush no preto = sem caixa */
@@ -132,6 +142,27 @@ body.entered #bg{ opacity:.5; }
 .tw .ch{ display:inline-block; white-space:pre; opacity:0; transform:translateY(.14em); }
 .tw .ch.on{ opacity:1; transform:none; transition:opacity .45s var(--ease-out), transform .45s var(--ease-out); }
 .tw .gch{ display:inline; transform:none; }
+
+/* ===== SEÇÃO 4 — Calendário (linhas das 4 bordas formam a grade + nós) ===== */
+#cal{ position:relative; height:560vh; }
+.cal-pin{ position:sticky; top:0; height:100vh; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+#calGrid{ position:absolute; inset:0; z-index:1; pointer-events:none; mix-blend-mode:screen; }
+.cal-wrap{ position:absolute; z-index:3; top:50%; left:50%; transform:translate(-50%,-50%); width:min(86vw,920px); }
+.cal-head{ text-align:center; margin-bottom:clamp(20px,3.4vh,40px); opacity:0; transform:translateY(14px); filter:blur(6px);
+  transition:opacity .9s var(--ease-out), transform .9s var(--ease-out), filter .9s ease; }
+.cal-head.in{ opacity:1; transform:none; filter:blur(0); }
+.cal-head .ce{ font-size:12.5px; letter-spacing:.3em; text-transform:uppercase; color:#FF8A2E; text-shadow:0 0 12px rgba(255,115,0,.5); }
+.cal-head h2{ font-size:clamp(2rem,5vw,3.6rem); color:#fff; margin-top:8px; }
+.cal-head h2 b{ color:#D9CBFF; font-weight:600; text-shadow:0 0 22px rgba(150,120,255,.55); }
+.cal-table{ display:flex; flex-direction:column; }
+.cal-row{ display:grid; grid-template-columns:1.55fr 1fr; align-items:center;
+  padding:clamp(13px,2.2vh,21px) clamp(18px,2.6vw,32px);
+  opacity:0; transform:translateY(16px); transition:opacity .8s var(--ease-out), transform .8s var(--ease-out); }
+.cal-row.in{ opacity:1; transform:none; }
+.cal-marco{ font-size:clamp(1rem,1.5vw,1.22rem); color:var(--ink); font-weight:500; text-align:left; padding-right:18px; }
+.cal-data{ font-size:clamp(1rem,1.6vw,1.3rem); color:#D9CBFF; font-weight:700; text-align:left; padding-left:20px; white-space:nowrap;
+  text-shadow:0 0 16px rgba(150,120,255,.5); }
+@media(max-width:620px){ .cal-row{ grid-template-columns:1fr; gap:3px; } .cal-data{ padding-left:0; } }
 </style>
 </head>
 <body>
@@ -150,9 +181,9 @@ body.entered #bg{ opacity:.5; }
   </div>
   <ul class="nav-links">
     <li class="nav-reveal"><a data-go="1">A categoria</a></li>
-    <li class="nav-reveal"><a data-go="1">Por que existe</a></li>
-    <li class="nav-reveal"><a data-go="1">Calendário</a></li>
-    <li class="nav-reveal"><a data-go="1">Contactos</a></li>
+    <li class="nav-reveal"><a data-go="2">Por que existe</a></li>
+    <li class="nav-reveal"><a data-go="3">Calendário</a></li>
+    <li class="nav-reveal"><a data-go="3">Contactos</a></li>
   </ul>
   <a href="#" class="nav-cta nav-reveal">Inscrever projeto</a>
 </nav>
@@ -161,6 +192,7 @@ body.entered #bg{ opacity:.5; }
   <button class="active" data-go="0" title="Início"></button>
   <button data-go="1" title="A categoria"></button>
   <button data-go="2" title="Por que existe"></button>
+  <button data-go="3" title="Calendário"></button>
 </div>
 
 <!-- ===== HERO ===== -->
@@ -210,6 +242,7 @@ body.entered #bg{ opacity:.5; }
 <section id="porque" data-sec="2">
   <div class="por-pin">
     <canvas id="ribbons"></canvas>
+    <div id="exitVeil"></div>
     <img class="pill pill-a" src="capsule1.png" alt="" />
     <img class="pill pill-b" src="capsule2.png" alt="" />
     <svg class="por-title-svg" viewBox="0 0 1100 200" preserveAspectRatio="xMidYMid meet" aria-label="Por que existe">
@@ -219,6 +252,26 @@ body.entered #bg{ opacity:.5; }
       <div class="por-col"><p>Hoje, falar de saúde é compreender comportamentos, alegrias, prazeres e dores. Em um mundo onde nosso aprendizado começa no digital, é essencial lembrar que o <em>toque humano</em> faz parte dessa equação.</p></div>
       <div class="por-col"><p>Acharam surreal a criatividade falar a língua da saúde? <em>Surreal seria ela não falar.</em></p></div>
       <div class="por-col"><p>Porque antes de ser dado, diagnóstico, tecnologia, saúde é <em>relação</em>. A saúde acontece entre pessoas, e criatividade é o jeito de transformar essa relação.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SEÇÃO 4 — Calendário ===== -->
+<section id="cal" data-sec="3">
+  <div class="cal-pin">
+    <canvas id="calGrid"></canvas>
+    <div class="cal-wrap">
+      <div class="cal-head">
+        <div class="ce">Calendário</div>
+        <h2 class="display">Edição <b>2026</b></h2>
+      </div>
+      <div class="cal-table">
+        <div class="cal-row"><span class="cal-marco">Abertura das inscrições</span><span class="cal-data">15 de junho</span></div>
+        <div class="cal-row"><span class="cal-marco">Early bird — desconto de 25%</span><span class="cal-data">15 a 26 de junho</span></div>
+        <div class="cal-row"><span class="cal-marco">Early bird — desconto de 10%</span><span class="cal-data">26 de junho a 24 de julho</span></div>
+        <div class="cal-row"><span class="cal-marco">Encerramento das inscrições</span><span class="cal-data">25 de setembro</span></div>
+        <div class="cal-row"><span class="cal-marco">Cerimónia de entrega</span><span class="cal-data">28 de outubro</span></div>
+      </div>
     </div>
   </div>
 </section>
@@ -374,7 +427,7 @@ function porqueProgress(){ const total=porqueEl.offsetHeight-innerHeight; return
 function updateDiss(t){
   let op=0, target=0;
   if(catVisible){ const p2=catProgress(); op=Math.max(op, clamp((p2-0.78)/0.14,0,1)); }   // aparece já no fim da seção 2 (antes da imagem sumir)
-  if(porqueVisible){ const p3=porqueProgress(); target=clamp(p3/0.4,0,1)*dDur; op=Math.max(op, 1-clamp((p3-0.4)/0.12,0,1)); }   // dissolve em p3 0→0.4, depois some
+  if(porqueVisible){ const pc=clamp(porqueProgress()/P3_CONTENT,0,1); target=clamp(pc/0.4,0,1)*dDur; op=Math.max(op, 1-clamp((pc-0.4)/0.12,0,1)); }   // dissolve em pc 0→0.4, depois some
   if(op<=0.001){ if(dissCv.style.opacity!=='0') dissCv.style.opacity='0'; return; }
   dCur+=(target-dCur)*0.2;
   if(dDur>0 && Math.abs(target-dCur)>0.02 && t-dLastSeek>45){ try{ dissVid.currentTime=dCur; }catch(e){} dLastSeek=t; }
@@ -385,40 +438,123 @@ addEventListener('resize', sizeDiss); sizeDiss();
 
 /* ---------- seção 3 (cena): faixas luminescentes + título em linhas + pílulas ---------- */
 const porTxt=$('#porTitleTxt'), DASH=4400, porSvg=$('.por-title-svg'), porCols=$$('.por-col');
+const porColsWrap=$('.por-cols'), exitVeil=$('#exitVeil');
 const pillA=$('.pill-a'), pillB=$('.pill-b'), ribCv=$('#ribbons'), rbx=ribCv.getContext('2d');
+const P3_CONTENT=0.78;   /* conteúdo ocupa 0→0.78 do scroll da seção; 0.78→1 = transição de SAÍDA */
 function sizeRibbons(){ ribCv.width=innerWidth; ribCv.height=innerHeight; }
 addEventListener('resize', sizeRibbons); sizeRibbons();
 function drawSeg(from,to,yb,amp,ph){ if(Math.abs(to-from)<3) return; const step=(to>from?16:-16); rbx.beginPath(); let first=true;
   for(let x=from; step>0? x<=to : x>=to; x+=step){ const y=yb+Math.sin(x*0.005+ph)*amp+Math.sin(x*0.011+ph*1.6)*amp*0.35; if(first){rbx.moveTo(x,y);first=false;} else rbx.lineTo(x,y);} rbx.stroke(); }
-function drawRibbons(t, reach){ const W=ribCv.width,H=ribCv.height; rbx.clearRect(0,0,W,H); const half=W*0.5*reach;
+function drawRibbons(t, reach, splitPx){ splitPx=splitPx||0; const W=ribCv.width,H=ribCv.height; rbx.clearRect(0,0,W,H); const half=W*0.5*reach;
   for(let b=0;b<5;b++){ const yb=H*(0.24+0.12*b), amp=H*(0.05+0.016*b), ph=t*0.0004*(0.7+b*0.25)+b*1.3;
     const c=(b%2)?'170,140,245':'255,165,100'; rbx.shadowColor='rgba('+c+',.6)'; rbx.shadowBlur=9; rbx.strokeStyle='rgba('+c+',.42)'; rbx.lineWidth=1.4;
-    drawSeg(0, half, yb, amp, ph); drawSeg(W, W-half, yb, amp, ph); }   // crescem das bordas pro centro (se conectam)
+    rbx.save(); rbx.translate(-splitPx,0); drawSeg(0, half, yb, amp, ph); rbx.restore();   // metade esq desliza pra ESQUERDA (sai pela borda)
+    rbx.save(); rbx.translate( splitPx,0); drawSeg(W, W-half, yb, amp, ph); rbx.restore(); }   // metade dir desliza pra DIREITA
   rbx.shadowBlur=0;
 }
-function updatePorque(t){ const p3=porqueProgress();
-  // faixas aparecem dos lados e se conectam no centro
-  const reach=clamp((p3-0.3)/0.2,0,1); ribCv.style.opacity=(clamp((p3-0.28)/0.1,0,1)*0.8).toFixed(2);
-  if(reach>0.001) drawRibbons(t, reach); else if(ribCv.width) rbx.clearRect(0,0,ribCv.width,ribCv.height);
+/* ===== pílulas: jornada contínua (cantos seç.3 → REDEMOINHO no centro → cantos OPOSTOS seç.4) ===== */
+function journeyPill(el, A, B, e, phase, inward, t){
+  const baseX=lerp(A.x,B.x,e), baseY=lerp(A.y,B.y,e);
+  const turns=2.0, ang=phase + e*Math.PI*2*turns;          // gira conforme o scroll = redemoinho suave
+  const spin=Math.sin(clamp(e,0,1)*Math.PI);               // 0 nas pontas, 1 no meio (raio máximo no meio)
+  const rad=spin*Math.min(innerWidth,innerHeight)*0.17;
+  const idle=(e>0.96)? Math.sin(t*0.0006+phase)*6 : 0;     // balanço suave ao pousar
+  const x=baseX+Math.cos(ang)*rad, y=baseY+Math.sin(ang)*rad+idle;
+  const sc=(inward? lerp(1,0.5,e) : lerp(0.5,1,e))*(1+0.2*spin);
+  const rot=ang*57.2958*0.5 + idle*0.4;
+  el.style.right='auto'; el.style.bottom='auto';
+  el.style.left=x.toFixed(1)+'px'; el.style.top=y.toFixed(1)+'px';
+  el.style.transform='translate(-50%,-50%) scale('+sc.toFixed(3)+') rotate('+rot.toFixed(1)+'deg)';
+  el.style.opacity='0.68';
+}
+function updatePills(t){
+  const p3=porqueProgress(), p4=calProgress();
+  const pc=clamp(p3/P3_CONTENT,0,1), pe=clamp((p3-P3_CONTENT)/(1-P3_CONTENT),0,1);
+  const W=innerWidth, H=innerHeight;
+  const aw=pillA.offsetWidth||120, ah=pillA.offsetHeight||120, bw=pillB.offsetWidth||120, bh=pillB.offsetHeight||120;
+  const M={x:W*0.5, y:H*0.62};                                                          // ponto do redemoinho (entre as duas)
+  const homeA={x:W*0.94-aw/2, y:H*0.12+ah/2}, homeB={x:W*0.06+bw/2, y:H*0.88-bh/2};     // cantos da seç.3
+  const destA={x:W*0.085+aw/2, y:H*0.17+ah/2}, destB={x:W*0.915-bw/2, y:H*0.83-bh/2};   // seç.4: SUP-ESQ / INF-DIR
+  if(p4>0.0005){                                  // seç.4: do redemoinho → pousam nos cantos opostos
+    const arr=ease3(clamp(p4/0.18,0,1));
+    journeyPill(pillA, M, destA, arr, 0,       false, t);
+    journeyPill(pillB, M, destB, arr, Math.PI, false, t);
+  } else if(pe>0.0005){                           // saída seç.3: dos cantos → redemoinho convergindo em M
+    const e=ease3(pe);
+    journeyPill(pillA, homeA, M, e, 0,       true, t);
+    journeyPill(pillB, homeB, M, e, Math.PI, true, t);
+  } else {                                        // conteúdo seç.3: cantos (CSS) + balanço suave
+    pillA.style.left=''; pillA.style.top=''; pillA.style.right=''; pillA.style.bottom='';
+    pillB.style.left=''; pillB.style.top=''; pillB.style.right=''; pillB.style.bottom='';
+    const swXa=Math.sin(t*0.00060)*7, swYa=Math.sin(t*0.00052+1.3)*10, swRa=Math.sin(t*0.00045)*2.4;
+    const swXb=Math.sin(t*0.00055+2.1)*7, swYb=Math.sin(t*0.00060+0.7)*10, swRb=Math.sin(t*0.00050+1.1)*2.4;
+    const ea=ease3(clamp((pc-0.45)/0.3,0,1)); pillA.style.opacity=(ea*0.66).toFixed(3);
+    pillA.style.transform='translate('+(lerp(80,0,ea)+swXa*ea).toFixed(2)+'px,'+(lerp(-80,0,ea)+swYa*ea).toFixed(2)+'px) rotate('+(lerp(26,6,ea)+swRa*ea).toFixed(2)+'deg)';
+    const eb=ease3(clamp((pc-0.5)/0.3,0,1)); pillB.style.opacity=(eb*0.66).toFixed(3);
+    pillB.style.transform='translate('+(lerp(-90,0,eb)+swXb*eb).toFixed(2)+'px,'+(lerp(90,0,eb)+swYb*eb).toFixed(2)+'px) rotate('+(lerp(-30,-9,eb)+swRb*eb).toFixed(2)+'deg)';
+  }
+}
+
+/* ===== seção 4: calendário (linhas das 4 bordas → grade + nós; conteúdo legível) ===== */
+const calEl=$('#cal'), calGrid=$('#calGrid'), cgx=calGrid.getContext('2d');
+const calHead=$('.cal-head'), calRows=$$('.cal-row'), COLSPLIT=0.608;
+function calProgress(){ const total=calEl.offsetHeight-innerHeight; return total>0?clamp(-calEl.getBoundingClientRect().top/total,0,1):0; }
+let calGeo=null;
+function computeCalGeo(){ const tb=$('.cal-table'); if(!tb) return; const r=tb.getBoundingClientRect(); if(r.width<5){ calGeo=null; return; }
+  const rows=$$('.cal-row'); if(!rows.length) return;
+  const hys=[Math.round(r.top)]; rows.forEach(rw=>hys.push(Math.round(rw.getBoundingClientRect().bottom)));   // borda topo + base de cada linha
+  const vxs=[Math.round(r.left), Math.round(r.left+r.width*COLSPLIT), Math.round(r.right)];                   // borda esq + divisória + borda dir
+  calGeo={x:Math.round(r.left),y:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height),vxs,hys}; }
+function cline(x1,y1,x2,y2){ cgx.beginPath(); cgx.moveTo(x1,y1); cgx.lineTo(x2,y2); cgx.stroke(); }
+function drawCalGrid(g){ if(!calGeo||g<=0) return; const {x,y,w,h,vxs,hys}=calGeo;
+  cgx.lineCap='round'; cgx.shadowColor='rgba(170,140,245,.5)'; cgx.shadowBlur=8; cgx.strokeStyle='rgba(200,182,255,.6)'; cgx.lineWidth=1.3;
+  const vh=(h/2)*g; vxs.forEach(vx=>{ cline(vx,y,vx,y+vh); cline(vx,y+h,vx,y+h-vh); });   // verticais: descem de CIMA + sobem de BAIXO
+  const hw=(w/2)*g; hys.forEach(hy=>{ cline(x,hy,x+hw,hy); cline(x+w,hy,x+w-hw,hy); });     // horizontais: entram da ESQ + da DIR (colidem no meio)
+  cgx.shadowBlur=0; }
+function drawCalNodes(np){ if(np<=0||!calGeo) return; const {vxs,hys}=calGeo; const total=vxs.length*hys.length; let k=0;
+  vxs.forEach(vx=>hys.forEach(hy=>{ const local=clamp((np-(k/total)*0.35)/0.65,0,1); k++; if(local<=0) return;
+    const r=2.3+local*3.4; cgx.beginPath(); cgx.fillStyle='rgba(255,150,80,'+(0.9*local).toFixed(2)+')'; cgx.shadowColor='rgba(255,140,60,.9)'; cgx.shadowBlur=12; cgx.arc(vx,hy,r,0,6.2832); cgx.fill(); }));
+  cgx.shadowBlur=0; }
+function updateCal(t){ const p4=calProgress(), W=innerWidth, H=innerHeight;
+  if(calGrid.width!==W||calGrid.height!==H){ calGrid.width=W; calGrid.height=H; }
+  cgx.clearRect(0,0,W,H); computeCalGeo();
+  drawCalGrid(ease3(clamp((p4-0.15)/0.3,0,1)));    // linhas crescem das bordas
+  drawCalNodes(clamp((p4-0.4)/0.16,0,1));          // nós surgem ao colidir
+  calHead.classList.toggle('in', p4>0.1);
+  calRows.forEach((r,i)=>r.classList.toggle('in', p4 > 0.52 + i*0.055)); }
+function updatePorque(t){
+  const p3=porqueProgress();
+  const pc=clamp(p3/P3_CONTENT,0,1);                          // progresso do CONTEÚDO (0→1 dentro de 0→0.78)
+  const pe=clamp((p3-P3_CONTENT)/(1-P3_CONTENT),0,1);         // progresso da SAÍDA (0→1 dentro de 0.78→1)
+  const eE=ease3(pe);
+
+  // faixas aparecem dos lados e se conectam no centro; na SAÍDA deslizam pra fora pelas bordas + fade
+  const reach=clamp((pc-0.3)/0.2,0,1);
+  ribCv.style.opacity=(clamp((pc-0.28)/0.1,0,1)*0.8*(1-eE)).toFixed(2);
+  const splitPx=eE*innerWidth*1.15;
+  if(reach>0.001) drawRibbons(t, reach, splitPx); else if(ribCv.width) rbx.clearRect(0,0,ribCv.width,ribCv.height);
+
+  // "preto abrindo": disco preto cresce do centro na saída
+  exitVeil.style.opacity=eE.toFixed(3);
+  exitVeil.style.setProperty('--r', (eE*80).toFixed(1)+'%');
+
   // título: a LINHA desenha as letras (stroke) e depois ACENDE em luz (fill+glow)
-  const draw=clamp((p3-0.42)/0.26,0,1); porTxt.style.strokeDashoffset=(DASH*(1-draw)).toFixed(0);
-  const light=clamp((p3-0.68)/0.16,0,1); porTxt.style.fill='rgba(224,210,255,'+(light*0.92).toFixed(2)+')';
+  const draw=clamp((pc-0.42)/0.26,0,1); porTxt.style.strokeDashoffset=(DASH*(1-draw)).toFixed(0);
+  const light=clamp((pc-0.68)/0.16,0,1); porTxt.style.fill='rgba(224,210,255,'+(light*0.92).toFixed(2)+')';
   porTxt.style.filter = light>0.01? 'drop-shadow(0 0 '+(8+light*18).toFixed(0)+'px rgba(150,120,255,.85))' : 'none';
-  // título sobe deslizando + colunas (segmentos) aparecem uma a uma, estilo landpage
-  const up=lerp(0,150,clamp((p3-0.82)/0.18,0,1));
-  porSvg.style.transform='translate(-50%, calc(-50% - '+up.toFixed(0)+'px))';
-  porCols.forEach((c,i)=>c.classList.toggle('in', p3 > 0.86+i*0.045));
-  // pílulas: entrada sutil + BALANÇO suave contínuo; mais transparentes
-  const swXa=Math.sin(t*0.00060)*7, swYa=Math.sin(t*0.00052+1.3)*10, swRa=Math.sin(t*0.00045)*2.4;
-  const swXb=Math.sin(t*0.00055+2.1)*7, swYb=Math.sin(t*0.00060+0.7)*10, swRb=Math.sin(t*0.00050+1.1)*2.4;
-  const ea=ease3(clamp((p3-0.45)/0.3,0,1)); pillA.style.opacity=(ea*0.66).toFixed(3);
-  pillA.style.transform='translate('+(lerp(80,0,ea)+swXa*ea).toFixed(2)+'px,'+(lerp(-80,0,ea)+swYa*ea).toFixed(2)+'px) rotate('+(lerp(26,6,ea)+swRa*ea).toFixed(2)+'deg)';
-  const eb=ease3(clamp((p3-0.5)/0.3,0,1)); pillB.style.opacity=(eb*0.66).toFixed(3);
-  pillB.style.transform='translate('+(lerp(-90,0,eb)+swXb*eb).toFixed(2)+'px,'+(lerp(90,0,eb)+swYb*eb).toFixed(2)+'px) rotate('+(lerp(-30,-9,eb)+swRb*eb).toFixed(2)+'deg)';
+
+  // título sobe deslizando + colunas aparecem uma a uma; na SAÍDA encolhem e somem "no fundo"
+  const up=lerp(0,150,clamp((pc-0.82)/0.18,0,1));
+  porSvg.style.transform='translate(-50%, calc(-50% - '+up.toFixed(0)+'px)) scale('+lerp(1,0.18,eE).toFixed(3)+')';
+  porSvg.style.opacity=(1-eE).toFixed(3);
+  // cards (landpage): o CARD forma primeiro (.in), o TEXTO surge depois (.tin) — mesma suavidade
+  porCols.forEach((c,i)=>{ const cs=0.84+i*0.04; c.classList.toggle('in', pc>cs); c.classList.toggle('tin', pc>cs+0.05); });
+  porColsWrap.style.transform='translateX(-50%) scale('+lerp(1,0.2,eE).toFixed(3)+') translateY('+(eE*-36).toFixed(0)+'px)';
+  porColsWrap.style.opacity=(1-eE).toFixed(3);
 }
 
 /* ---------- master loop ---------- */
-let heroVisible=true, catVisible=false, porqueVisible=false;
+let heroVisible=true, catVisible=false, porqueVisible=false, calVisible=false;
 function raf(t){
   if(heroVisible){
     const p=heroProgress(); tgt=p*dur;
@@ -432,6 +568,8 @@ function raf(t){
   }
   if(catVisible){ updateNet(); setDot(1); }
   if(porqueVisible){ setDot(2); updatePorque(t); }
+  if(calVisible){ setDot(3); updateCal(t); }
+  updatePills(t);
   updateDiss(t);
   requestAnimationFrame(raf);
 }
@@ -441,8 +579,9 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{
   if(e.target===hero) heroVisible=e.isIntersecting;
   if(e.target===catEl){ catVisible=e.isIntersecting; if(catVisible) sizeNet(); }
   if(e.target===porqueEl){ porqueVisible=e.isIntersecting; if(porqueVisible){ sizeDiss(); sizeRibbons(); } }
+  if(e.target===calEl){ calVisible=e.isIntersecting; if(calVisible){ calGrid.width=innerWidth; calGrid.height=innerHeight; calGeo=null; } }
 }),{threshold:0});
-io.observe(hero); io.observe(catEl); io.observe(porqueEl);
+io.observe(hero); io.observe(catEl); io.observe(porqueEl); io.observe(calEl);
 
 /* ---------- dots ---------- */
 const dotBtns=$$('.dots button'); let curDot=-1;
@@ -483,7 +622,7 @@ addEventListener('wheel', e=>{ e.preventDefault(); targetY=clamp(targetY+e.delta
 addEventListener('scroll', ()=>{ if(progScroll){ progScroll=false; return; } targetY=curY=window.scrollY; }, {passive:true});  // arrastar a barra/teclas: sincroniza
 (function smooth(){ curY+=(targetY-curY)*0.12; if(Math.abs(targetY-curY)>0.4){ progScroll=true; window.scrollTo(0, curY); } requestAnimationFrame(smooth); })();
 
-const secEls=[hero, catEl, porqueEl];
+const secEls=[hero, catEl, porqueEl, calEl];
 $$('[data-go]').forEach(a=>a.addEventListener('click',e=>{ e.preventDefault(); const i=+a.dataset.go;
   if(secEls[i]) targetY=clamp(secEls[i].offsetTop, 0, maxY()); }));
 </script>
