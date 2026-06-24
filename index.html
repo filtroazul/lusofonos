@@ -79,8 +79,8 @@ body.entered #bg{ opacity:.5; }
   -webkit-mask:linear-gradient(to bottom, #000 0%, #000 var(--rev,0%), transparent calc(var(--rev,0%) + 7%));
   mask:linear-gradient(to bottom, #000 0%, #000 var(--rev,0%), transparent calc(var(--rev,0%) + 7%)); }   /* pichação: revela de cima→baixo via scroll (--rev) */
 .mancha{ position:absolute; z-index:2; pointer-events:none; opacity:0; will-change:transform, opacity; filter:drop-shadow(0 0 26px rgba(131,103,223,.22)); }
-.mancha-a{ left:1%; top:15%; width:min(25vw,300px); }    /* sup-esq, perto do título */
-.mancha-b{ right:1%; top:56%; width:min(23vw,280px); }   /* inf-dir */
+.mancha-a{ left:8%; top:19%; width:min(25vw,300px); }    /* sup-esq, perto do título */
+.mancha-b{ right:8%; top:50%; width:min(23vw,280px); }   /* inf-dir */
 @media(max-width:760px){ .mancha-a{ width:44vw; } .mancha-b{ width:42vw; } }
 .hero-copy{ position:relative; z-index:3; text-align:center; max-width:940px; }
 .eyebrow{ font-size:12.5px; letter-spacing:.3em; text-transform:uppercase; color:#FF8A2E; font-weight:600; margin-bottom:24px;
@@ -326,15 +326,15 @@ function handsEnter(){
 /* manchas (arte2/arte3): entram deslizando dos lados conforme a rolagem do hero */
 function updateArt(p){
   const e=ease3(clamp(p/0.55,0,1));
-  arteA.style.opacity=(e*0.9).toFixed(3); arteA.style.transform='translateX('+lerp(-55,0,e).toFixed(1)+'vw) rotate(-24deg)';   // arte3: anti-horário (moldura na ponta esq)
+  arteA.style.opacity=(e*0.9).toFixed(3); arteA.style.transform='translateX('+lerp(-55,0,e).toFixed(1)+'vw) rotate(-52deg)';   // arte3: anti-horário (moldura na ponta esq)
   arteB.style.opacity=(e*0.9).toFixed(3); arteB.style.transform='translateX('+lerp(55,0,e).toFixed(1)+'vw) rotate(22deg)';    // arte2: horário
   // pichação: título revela de cima→baixo conforme rola (--rev 0→100%)
   if(heroArt){ const rev=ease3(clamp(p/0.42,0,1))*100; heroArt.style.setProperty('--rev', rev.toFixed(1)+'%'); }
 }
 function updateHands(p){
   if(!handsReady) return;
-  // p=0 → afastadas (apart);  p=1 → dedinhos só ENCOSTANDO (sem cruzar)
-  const lx=lerp(-13,2,p), rx=lerp(13,-2,p);
+  // p=0 → afastadas (apart);  p=1 → dedinhos quase se TOCANDO (sem colidir/misturar)
+  const lx=lerp(-13,11,p), rx=lerp(13,-15,p);
   tL.style.transform='translateY(-50%) translateX('+lx.toFixed(2)+'vw)';
   tR.style.transform='translateY(-50%) translateX('+rx.toFixed(2)+'vw)';
   const o=lerp(.42,.72,p);
