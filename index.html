@@ -378,6 +378,27 @@ const tL=$('.tinta.l'), tR=$('.tinta.r'), scrollHint=$('#scrollHint');
 const arteA=$('.mancha-a'), arteB=$('.mancha-b'), heroArt=$('.hero-art');
 const SVGNS='http://www.w3.org/2000/svg';
 
+/* ---------- prime de vídeo p/ scrub (anti-bug no F5) ----------
+   O canvas só mostra algo se o frame do vídeo já estiver decodificado. No PC sem GPU
+   o decode é na CPU e às vezes o frame ainda não existe na hora de desenhar → canvas em branco.
+   Aqui: força o load, redesenha quando um frame É de fato apresentado (requestVideoFrameCallback),
+   força a decodificação do 1º frame e tenta de novo em erro/stall. */
+function primeVideo(v, drawFn){
+  const rvfc = v.requestVideoFrameCallback ? v.requestVideoFrameCallback.bind(v) : null;
+  function onFrame(){ drawFn(); if(rvfc) rvfc(onFrame); }
+  function kick(){
+    if(v.videoWidth && v.videoHeight){
+      if(v.currentTime===0){ try{ v.currentTime=0.001; }catch(e){} }  // empurra p/ forçar decode do 1º frame
+      drawFn();
+    }
+  }
+  v.addEventListener('loadeddata', ()=>{ kick(); if(rvfc) rvfc(onFrame); });
+  v.addEventListener('canplay', kick);
+  v.addEventListener('error',   ()=>{ setTimeout(()=>{ try{ v.load(); }catch(e){} }, 600); });
+  v.addEventListener('stalled', ()=>{ try{ v.load(); }catch(e){} });
+  try{ v.load(); }catch(e){}   // garante o início do download/decode mesmo se preload="auto" for ignorado
+}
+
 /* ---------- background scrub (canvas) ---------- */
 let dur=0, cur=0, tgt=0, ready=false, lastSeek=0;
 function sizeBg(){ const w=Math.min(innerWidth,820); bg.width=Math.round(w); bg.height=Math.round(w*innerHeight/innerWidth); draw(); }   /* cap menor: fundo é borrado+.5 opacidade, rasteriza mais barato (scroll mais suave no PC sem GPU) */
@@ -387,6 +408,7 @@ function draw(){ const v=bgv, vw=v.videoWidth, vh=v.videoHeight; if(!vw||!vh) re
 bgv.addEventListener('loadedmetadata',()=>{ dur=bgv.duration||0; });
 bgv.addEventListener('seeked',()=>{ draw(); });   // reforço (mas NÃO dependemos disso — desenhamos todo frame)
 bgv.addEventListener('loadeddata',()=>{ ready=true; try{ bgv.currentTime=0; }catch(e){} draw(); });
+primeVideo(bgv, draw);
 
 function heroProgress(){ const total=hero.offsetHeight-innerHeight; return total>0?clamp(-hero.getBoundingClientRect().top/total,0,1):0; }
 
@@ -531,6 +553,7 @@ function drawDiss(){ const v=dissVid, vw=v.videoWidth, vh=v.videoHeight; if(!vw|
 dissVid.addEventListener('loadedmetadata',()=>{ dDur=dissVid.duration||0; });
 dissVid.addEventListener('seeked',()=>{ drawDiss(); });
 dissVid.addEventListener('loadeddata',()=>{ dReady=true; try{ dissVid.currentTime=0; }catch(e){} drawDiss(); });
+primeVideo(dissVid, drawDiss);
 function porqueProgress(){ const total=porqueEl.offsetHeight-innerHeight; return total>0?clamp(-porqueEl.getBoundingClientRect().top/total,0,1):0; }
 function updateDiss(t){
   let op=0, target=0;
@@ -711,6 +734,7 @@ function drawFim(){ const v=fimv, vw=v.videoWidth, vh=v.videoHeight; if(!vw||!vh
   const cw=fimBg.width, ch=fimBg.height, s=Math.max(cw/vw,ch/vh), dw=vw*s, dh=vh*s; fctx.clearRect(0,0,cw,ch); fctx.drawImage(v,(cw-dw)/2,(ch-dh)/2,dw,dh); }
 fimv.addEventListener('loadedmetadata',()=>{ fDur=fimv.duration||0; });
 fimv.addEventListener('loadeddata',()=>{ try{ fimv.currentTime=0; }catch(e){} drawFim(); });
+primeVideo(fimv, drawFim);
 function fimProgress(){ const total=fimEl.offsetHeight-innerHeight; return total>0?clamp(-fimEl.getBoundingClientRect().top/total,0,1):0; }
 function updateFim(t){ const p5=fimProgress();
   const tgt=clamp(p5/0.7,0,1)*fDur; fCur+=(tgt-fCur)*0.2;   // tinta forma na 1ª parte do scroll
